@@ -1,0 +1,25 @@
+{
+  "name": "amo-client",
+  "version": "1.0.0",
+  "description": "Javascript library for AMO client",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amolabs/amo-client-js.git"
+  },
+  "keywords": [
+    "AMO",
+    "blockchain",
+    "rpc",
+    "explorer"
+  ],
+  "author": "Yeon-Hyeong Yang <yang.yh@pentasecurity.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/amolabs/amo-client-js/issues"
+  },
+  "homepage": "https://github.com/amolabs/amo-client-js#readme"
+}
