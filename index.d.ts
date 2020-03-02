@@ -1,3 +1,25 @@
+import {AxiosRequestConfig} from "axios"
+
+declare module 'amo-clinet-js' {
+    interface AmoClient {
+        new(config: AxiosRequestConfig)
+
+        fetchLastBlock(): Promise<FormattedBlockHeader>
+
+        fetchBlock(height: number | string): Promise<FormattedBlock>
+
+        fetchBlockHeaders(maxHeight: number, count: number): Promise<FormattedBlockHeader[]>
+
+        fetchRecentBlockHeaders(): Promise<FormattedBlockHeader[]>
+
+        fetchTx(hash): Promise<Tx>
+
+        fetchRecentTxs(): Promise<Tx[]>
+
+        fetchValidators(): Promise<Validator[]>
+    }
+}
+
 interface TendermintBlock {
     block_meta: BlockMeta
     block: Block
@@ -39,7 +61,7 @@ interface FormattedBlockHeader {
     timestamp: string
 }
 
-interface FormattedBlock extends FormattedBlockHeader{
+interface FormattedBlock extends FormattedBlockHeader {
     txs?: Tx[]
 }
 
@@ -69,4 +91,24 @@ interface Signature {
 interface BlockchainResponse {
     last_height: string
     block_metas: BlockMeta[]
+}
+
+interface TxResponse {
+    tx: string
+}
+
+interface PubKey {
+    type: string
+    value: string
+}
+
+interface ValidatorsResponse {
+    validators: Validator[]
+}
+
+interface Validator {
+    address: string
+    pub_key: PubKey
+    voting_power: string
+    proposer_priority: string
 }

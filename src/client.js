@@ -41,13 +41,8 @@ function formatBlock (blk) {
 }
 
 export class AmoClient {
-
   _client
 
-  /**
-   *
-   * @param config {AxiosRequestConfig}
-   */
   constructor (config) {
     if (!config) {
       config = {
@@ -62,23 +57,14 @@ export class AmoClient {
     this._client = axios.create(config)
   }
 
-  /**
-   *
-   * @returns {Promise<FormattedBlockHeader> | PromiseLike<FormattedBlockHeader>}
-   */
   fetchLastBlock () {
     return this._client
-      .get(`/block`)
+      .get('/block')
       .then(({ data: { result } }) => {
         return formatBlockHeader(result.block_meta)
       })
   }
 
-  /**
-   *
-   * @param height {number | string} Height of block
-   * @returns {Promise<FormattedBlock> | PromiseLike<FormattedBlock>}
-   */
   fetchBlock (height) {
     return this._client
       .get(`/block?height=${height}`)
@@ -102,10 +88,33 @@ export class AmoClient {
 
   fetchRecentBlockHeaders () {
     return this._client
-      .get(`/blockchain`)
+      .get('/blockchain')
       .then(({ data: { result } }) => {
         return result.block_metas.map(formatBlockHeader)
       })
   }
 
+  // TODO Consider return 'tx_result' with result
+  fetchTx (hash) {
+    hash = hash.startsWith('0x') ? hash : `0x${hash}`
+    return this._client
+      .get(`/tx?hash=${hash}`)
+      .then(({ data }) => {
+        if ('error' in data) {
+          return Promise.reject(data)
+        }
+
+        return JSON.parse(
+          Buffer.from(data.result.tx, 'base64').toString()
+        )
+      })
+  }
+
+  fetchValidators () {
+    return this._client
+      .get('/validators')
+      .then(({ data: { result } }) => {
+        return result.validators
+      })
+  }
 }

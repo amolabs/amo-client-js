@@ -9,6 +9,25 @@ HTTP(S)를 통해 AMO 블록체인 노드와 통신한다.
 
 ## 사용법
 
+### 설치
+`npm install amo-client-js` or `yarn add amo-client-js`
+
+### 예시
+```javascript
+import { AMOClient } from 'amo-client-js'
+
+// Create client
+const client = new AMOClient({
+  baseURL: '<AMO node rpc endpoint>' // by default: url.BC_NODE_AMO_TOKYO 
+  // ... extra config from AxiosRequestConfig
+})
+
+(async () => {
+  const lastBlock = await client.fetchLastBlock()
+  console.log(JSON.stringify(lastBlock, null, 4))
+})()
+```
+
 ## 원격 서버
 모든 AMO 클라이언트는 서버-클라이언트 구조에서 동작하기 때문에 사용자 요청을
 처리하기 위해서는 원격 서버 주소가 필요하다. 이를 AMO 블록체인 RPC 노드라 한다.
@@ -34,4 +53,4 @@ TBA: AMO Labs에서 제공하는 공개된 RPC 노드 주소 추가
 일기 전용인 조회 기능만 사용하는 경우는 세번째 옵션에 해당한다.
 
 ## API
-TBA
+index.d.ts의 AmoClient 참고

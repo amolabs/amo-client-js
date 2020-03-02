@@ -42,7 +42,7 @@ this port number.
 TBA: Public RPC node addresses provided by AMO Labs
 
 ## About user keys
-**NTOE:** This issue is not relevant when you want to use this library in
+**NOTE:** This issue is not relevant when you want to use this library in
 purely read-only opertions. However, if you want to use this library for
 web-based wallet or similar kind of software which emits transactions signed
 with the user private key, you must be cautious dealing with seeds and keys.
@@ -58,4 +58,4 @@ The third option is relevant when you are planning to implement read-only
 inspection features.
 
 ## API
-TBA
+Check AmoClient at index.d.ts
