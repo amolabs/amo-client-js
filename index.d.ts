@@ -1,23 +1,26 @@
 import {AxiosRequestConfig} from "axios"
 
-declare module 'amo-clinet-js' {
-    interface AmoClient {
-        new(config: AxiosRequestConfig)
+declare class AmoClient {
+    constructor()
+    constructor(config: AxiosRequestConfig)
 
-        fetchLastBlock(): Promise<FormattedBlockHeader>
+    fetchLastBlock(): Promise<FormattedBlockHeader>
 
-        fetchBlock(height: number | string): Promise<FormattedBlock>
+    fetchBlock(height: number | string): Promise<FormattedBlock>
 
-        fetchBlockHeaders(maxHeight: number, count: number): Promise<FormattedBlockHeader[]>
+    fetchBlockHeaders(maxHeight: number, count: number): Promise<FormattedBlockHeader[]>
 
-        fetchRecentBlockHeaders(): Promise<FormattedBlockHeader[]>
+    fetchRecentBlockHeaders(): Promise<FormattedBlockHeader[]>
 
-        fetchTx(hash): Promise<Tx>
+    fetchTx(hash): Promise<Tx>
 
-        fetchRecentTxs(): Promise<Tx[]>
+    fetchRecentTxs(): Promise<Tx[]>
 
-        fetchValidators(): Promise<Validator[]>
-    }
+    fetchValidators(): Promise<Validator[]>
+}
+
+declare const url: {
+    BC_NODE_AMO_TOKYO: string
 }
 
 interface TendermintBlock {
