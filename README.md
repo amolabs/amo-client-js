@@ -10,11 +10,11 @@ library or package intereact with AMO blockchain nodes over HTTP(S) using
 ## Using this package
 
 ### Install
-`npm install amo-client-js` or `yarn add amo-client-js`
+`npm install amo-client` or `yarn add amo-client`
 
 ### Usage
 ```javascript
-import { AMOClient } from 'amo-client-js'
+import { AMOClient } from 'amo-client'
 
 // Create client
 const client = new AMOClient({
@@ -58,4 +58,4 @@ The third option is relevant when you are planning to implement read-only
 inspection features.
 
 ## API
-Check AmoClient at index.d.ts
+Check `AmoClient` in index.d.ts

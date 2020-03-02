@@ -10,11 +10,11 @@ HTTP(S)를 통해 AMO 블록체인 노드와 통신한다.
 ## 사용법
 
 ### 설치
-`npm install amo-client-js` or `yarn add amo-client-js`
+`npm install amo-client` or `yarn add amo-client`
 
 ### 예시
 ```javascript
-import { AMOClient } from 'amo-client-js'
+import { AMOClient } from 'amo-client'
 
 // Create client
 const client = new AMOClient({
@@ -53,4 +53,4 @@ TBA: AMO Labs에서 제공하는 공개된 RPC 노드 주소 추가
 일기 전용인 조회 기능만 사용하는 경우는 세번째 옵션에 해당한다.
 
 ## API
-index.d.ts의 AmoClient 참고
+index.d.ts의 `AmoClient` 참고
