@@ -9,6 +9,25 @@ library or package intereact with AMO blockchain nodes over HTTP(S) using
 
 ## Using this package
 
+### Install
+`npm install amo-client-js` or `yarn add amo-client-js`
+
+### Usage
+```javascript
+import { AMOClient } from 'amo-client-js'
+
+// Create client
+const client = new AMOClient({
+  baseURL: '<AMO node rpc endpoint>' // by default: url.BC_NODE_AMO_TOKYO 
+  // ... extra config from AxiosRequestConfig
+})
+
+(async () => {
+  const lastBlock = await client.fetchLastBlock()
+  console.log(JSON.stringify(lastBlock, null, 4))
+})()
+```
+
 ## Remote servers
 Since every AMO client is a client program, it needs remote server addresses to
 perform user requests. That is AMO blockchain RPC node.
