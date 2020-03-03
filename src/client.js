@@ -2,7 +2,8 @@ import axios from 'axios'
 import { createHash } from 'crypto'
 
 export const url = {
-  BC_NODE_AMO_TOKYO: 'http://139.162.116.176:26657'
+  BC_NODE_AMO_TOKYO: 'http://139.162.116.176:26657',
+  AMO_STORAGE: 'http://139.162.111.178:5000'
 }
 
 /***
@@ -64,8 +65,9 @@ function parseTxs (data) {
 
 export class AmoClient {
   _client
+  _storageClient
 
-  constructor (config) {
+  constructor (config, storageConfig) {
     if (!config) {
       config = {
         baseURL: url.BC_NODE_AMO_TOKYO
@@ -76,7 +78,27 @@ export class AmoClient {
       config.baseURL = url.BC_NODE_AMO_TOKYO
     }
 
+    if (!storageConfig) {
+      storageConfig = {
+        baseURL: url.AMO_STORAGE,
+        headers: {
+          'content-type': 'application/json'
+        }
+      }
+    }
+
+    if (!storageConfig.baseURL) {
+      storageConfig.baseURL = url.AMO_STORAGE
+    }
+
+    if (!storageConfig.headers) {
+      storageConfig.headers = {
+        'content-type': 'application/json'
+      }
+    }
+
     this._client = axios.create(config)
+    this._storageClient = axios.create(storageConfig)
   }
 
   fetchLastBlock () {
@@ -322,6 +344,14 @@ export class AmoClient {
     }, 'cancel', sender)
   }
 
+  /**
+   *
+   * @param parcel
+   * @param grantee
+   * @param custody {Buffer}
+   * @param sender
+   * @returns {Promise<never>}
+   */
   grantParcel (parcel, grantee, custody, sender) {
     return this._buildTxSend({
       target: parcel.id.toUpperCase(),

@@ -2,8 +2,7 @@ import {AxiosRequestConfig} from "axios"
 import {eddsa} from "elliptic"
 
 declare class AmoClient {
-    constructor()
-    constructor(config: AxiosRequestConfig)
+    constructor(config?: AxiosRequestConfig, storageClient?: AxiosRequestConfig)
 
     fetchLastBlock(): Promise<FormattedBlockHeader>
 
@@ -39,39 +38,49 @@ declare class AmoClient {
 
     fetchUsage(buyer, target): Promise<UsageStorage | null>
 
-    transfer(recipient: string, amount: string, sender: Sender): Promise<TxResult>
+    transfer(recipient: string, amount: string, sender: Account): Promise<TxResult>
 
-    delegate(delegatee: string, amount: string, sender: Sender): Promise<TxResult>
+    delegate(delegatee: string, amount: string, sender: Account): Promise<TxResult>
 
-    retract(amount: string, sender: Sender): Promise<TxResult>
+    retract(amount: string, sender: Account): Promise<TxResult>
 
-    registerParcel(parcel: Parcel, sender: Sender): Promise<TxResult>
+    registerParcel(parcel: Parcel, sender: Account): Promise<TxResult>
 
-    discardParcel(parcel: Parcel, sender: Sender): Promise<TxResult>
+    discardParcel(parcel: Parcel, sender: Account): Promise<TxResult>
 
-    requestParcel(parcel: Parcel, payment: string, sender: Sender): Promise<TxResult>
+    requestParcel(parcel: Parcel, payment: string, sender: Account): Promise<TxResult>
 
-    cancelRequest(parcel: Parcel, sender: Sender): Promise<TxResult>
+    cancelRequest(parcel: Parcel, sender: Account): Promise<TxResult>
 
-    grantParcel(parcel: Parcel, grantee: Grantee, custody: Buffer, sender: Sender): Promise<TxResult>
+    grantParcel(parcel: Parcel, grantee: Grantee, custody: Buffer, sender: Account): Promise<TxResult>
 
-    revokeGrant(parcel: Parcel, grantee: Grantee, sender: Sender): Promise<TxResult>
+    revokeGrant(parcel: Parcel, grantee: Grantee, sender: Account): Promise<TxResult>
 }
 
-// TODO Check type
 interface TxResult {
-
+    check_tx: TxProcess
+    deliver_tx: TxProcess
+    hash: string
+    height: string
 }
 
-// FIXME Check type
+interface TxProcess {
+    code: number
+    data: string
+    log: string
+    gas_used: number
+    gas_wanted: number
+    info: string
+    tags: object
+}
+
 interface Grantee {
     address: string
 }
 
-// FIXME Check type
 interface Parcel {
     id: string
-    custody: Buffer
+    custody?: Buffer
 }
 
 declare const url: {
@@ -345,7 +354,7 @@ interface UsageStorage {
     extra?: object
 }
 
-interface Sender {
+interface Account {
     address: string
     ecKey: eddsa.KeyPair
 }
