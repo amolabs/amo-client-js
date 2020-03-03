@@ -1,8 +1,8 @@
 import {AxiosRequestConfig} from "axios"
+import {ec} from "elliptic"
 
 declare class AmoClient {
-    constructor()
-    constructor(config: AxiosRequestConfig)
+    constructor(config?: AxiosRequestConfig, storageClient?: AxiosRequestConfig)
 
     fetchLastBlock(): Promise<FormattedBlockHeader>
 
@@ -37,6 +37,50 @@ declare class AmoClient {
     fetchRequest(buyer, target): Promise<RequestStorage | null>
 
     fetchUsage(buyer, target): Promise<UsageStorage | null>
+
+    transfer(recipient: string, amount: string, sender: Account): Promise<TxResult>
+
+    delegate(delegatee: string, amount: string, sender: Account): Promise<TxResult>
+
+    retract(amount: string, sender: Account): Promise<TxResult>
+
+    registerParcel(parcel: Parcel, sender: Account): Promise<TxResult>
+
+    discardParcel(parcel: Parcel, sender: Account): Promise<TxResult>
+
+    requestParcel(parcel: Parcel, payment: string, sender: Account): Promise<TxResult>
+
+    cancelRequest(parcel: Parcel, sender: Account): Promise<TxResult>
+
+    grantParcel(parcel: Parcel, grantee: Grantee, custody: Buffer, sender: Account): Promise<TxResult>
+
+    revokeGrant(parcel: Parcel, grantee: Grantee, sender: Account): Promise<TxResult>
+}
+
+interface TxResult {
+    check_tx: TxProcess
+    deliver_tx: TxProcess
+    hash: string
+    height: string
+}
+
+interface TxProcess {
+    code: number
+    data: string
+    log: string
+    gas_used: number
+    gas_wanted: number
+    info: string
+    tags: object
+}
+
+interface Grantee {
+    address: string
+}
+
+interface Parcel {
+    id: string
+    custody?: Buffer
 }
 
 declare const url: {
@@ -94,8 +138,8 @@ interface Tx {
     fee: string,
     last_height: string,
     payload: object
-    signature: Signature
-    hash: string
+    signature?: Signature
+    hash?: string
 }
 
 interface TransferTx extends Tx {
@@ -287,7 +331,7 @@ interface StakeStorage {
 }
 
 interface DelegateStorage {
-    delegate: string
+    delegatee: string
     amount: string
 }
 
@@ -308,4 +352,19 @@ interface RequestStorage {
 interface UsageStorage {
     custody: string
     extra?: object
+}
+
+interface Account {
+    address: string
+    ecKey: ec.KeyPair
+}
+
+interface SyncInfo {
+    latest_block_height: string
+    latest_block_hash: string
+}
+
+interface StatusResponse {
+    sync_info: SyncInfo
+    // TODO
 }
