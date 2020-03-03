@@ -1,4 +1,5 @@
 import {AxiosRequestConfig} from "axios"
+import {eddsa} from "elliptic"
 
 declare class AmoClient {
     constructor()
@@ -94,8 +95,8 @@ interface Tx {
     fee: string,
     last_height: string,
     payload: object
-    signature: Signature
-    hash: string
+    signature?: Signature
+    hash?: string
 }
 
 interface TransferTx extends Tx {
@@ -287,7 +288,7 @@ interface StakeStorage {
 }
 
 interface DelegateStorage {
-    delegate: string
+    delegatee: string
     amount: string
 }
 
@@ -308,4 +309,9 @@ interface RequestStorage {
 interface UsageStorage {
     custody: string
     extra?: object
+}
+
+interface Sender {
+    address: string
+    ecKey: eddsa.KeyPair
 }

@@ -21,6 +21,10 @@ function formatBlockHeader (blk) {
   }
 }
 
+function sha256 (b) {
+  return createHash('sha256').update(b).digest()
+}
+
 /***
  *
  * @param blk: {Block}
@@ -31,7 +35,7 @@ function formatBlock (blk) {
     ...formatBlockHeader(blk.block_meta),
     txs: blk.block.data.txs.map(tx => {
       const decoded = Buffer.from(tx, 'base64')
-      const hash = createHash('sha256').update(decoded).digest().toString('hex')
+      const hash = sha256(decoded).toString('hex')
       return {
         ...JSON.parse(decoded.toString()),
         hash
@@ -200,4 +204,137 @@ export class AmoClient {
   fetchUsage (buyer, target) {
     return this._buildAbciQuery('usage', { buyer, target }, null)
   }
+
+  sendTx (tx, ecKey) {
+    return this._client
+      .get('/status')
+      .then(({ data }) => {
+        tx.fee = '0'
+        tx.last_height = data.result.sync_info.lastest_block_height
+        const rawTx = JSON.stringify(this._singTx(tx, ecKey))
+        return this.sendRawTx(rawTx)
+      })
+  }
+
+  _sing (sb, key) {
+    const sig = key.sign(sha256(sb))
+    const r = ('0000' + sig.r.toString('hex')).slice(-64)
+    const s = ('0000' + sig.s.toString('hex')).slice(-64)
+    return r + s
+  }
+
+  _singTx (tx, key) {
+    const txToSign = {
+      type: tx.type,
+      sender: tx.sender,
+      fee: tx.fee,
+      last_height: tx.last_height,
+      payload: tx.payload
+    }
+
+    const sig = this._sing(JSON.stringify(txToSign), key)
+    txToSign.signature = {
+      pubKey: key.getPublic().encode('hex'),
+      sig_bytes: sig
+    }
+
+    return txToSign
+  }
+
+  sendRawTx (tx) {
+    const escaped = tx.replace(/"/g, '\\"')
+    return this._client
+      .post(`/broadcast_tx_commit?tx="${escaped}"`)
+      .then(({ data }) => {
+        if (data.error) {
+          return Promise.reject(data.error)
+        } else if (data.result.check_tx.code > 0) {
+          console.log('check_tx error:', data.result.check_tx.code)
+          console.log(data.result.check_tx.info)
+          return Promise.reject(data.result.check_tx)
+        } else if (data.result.deliver_tx.code > 0) {
+          console.log('deliver_tx error:', data.result.deliver_tx.code)
+          console.log(data.result.deliver_tx.info)
+          return Promise.reject(data.result.deliver_tx)
+        } else {
+          return data
+        }
+      })
+  }
+
+  _buildTxSend (payload, type, sender) {
+    if (!sender || !sender.ecKey) {
+      return Promise.reject('no sender key')
+    }
+
+    const tx = {
+      type,
+      payload,
+      sender: sender.address.toUpperCase()
+    }
+
+    return this.sendTx(tx, sender.ecKey)
+  }
+
+  transfer (recipient, amount, sender) {
+    return this._buildTxSend({
+      amount,
+      to: recipient.toUpperCase()
+    }, 'transfer', sender)
+  }
+
+  delegate (delegatee, amount, sender) {
+    return this._buildTxSend({
+      amount,
+      to: delegatee.toUpperCase(),
+    }, 'delegate', sender)
+  }
+
+  retract (amount, sender) {
+    return this._buildTxSend({
+      amount
+    }, 'retract', sender)
+  }
+
+  registerParcel (parcel, sender) {
+    return this._buildTxSend({
+      target: parcel.id.toUpperCase(),
+      custody: parcel.custody.toString('hex').toUpperCase()
+    }, 'register', sender)
+  }
+
+  discardParcel (parcel, sender) {
+    return this._buildTxSend({
+      target: parcel.id.toUpperCase()
+    }, 'discard', sender)
+  }
+
+  requestParcel (parcel, payment, sender) {
+    return this._buildTxSend({
+      payment,
+      target: parcel.id.toUpperCase(),
+    }, 'request', sender)
+  }
+
+  cancelRequest (parcel, sender) {
+    return this._buildTxSend({
+      target: parcel.id.toUpperCase()
+    }, 'cancel', sender)
+  }
+
+  grantParcel (parcel, grantee, custody, sender) {
+    return this._buildTxSend({
+      target: parcel.id.toUpperCase(),
+      grantee: grantee.address.toUpperCase(),
+      custody: custody.toString('hex').toUpperCase()
+    }, 'grant', sender)
+  }
+
+  revokeGrant (parcel, grantee, sender) {
+    return this._buildTxSend({
+      target: parcel.id.toUpperCase(),
+      grantee: grantee.address.toUpperCase()
+    }, 'revoke', sender)
+  }
+
 }
