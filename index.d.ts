@@ -1,5 +1,5 @@
 import {AxiosRequestConfig} from "axios"
-import {eddsa} from "elliptic"
+import {ec} from "elliptic"
 
 declare class AmoClient {
     constructor(config?: AxiosRequestConfig, storageClient?: AxiosRequestConfig)
@@ -356,5 +356,5 @@ interface UsageStorage {
 
 interface Account {
     address: string
-    ecKey: eddsa.KeyPair
+    ecKey: ec.KeyPair
 }

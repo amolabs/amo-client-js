@@ -350,7 +350,7 @@ export class AmoClient {
    * @param grantee
    * @param custody {Buffer}
    * @param sender
-   * @returns {Promise<never>}
+   * @returns {Promise<TxResult>}
    */
   grantParcel (parcel, grantee, custody, sender) {
     return this._buildTxSend({
