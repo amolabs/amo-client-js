@@ -26,21 +26,17 @@ declare class AmoClient {
 
     fetchBalance(address: string): Promise<string>
 
-    fetchStake(address: string): Promise<Staked | null>
+    fetchStake(address: string): Promise<StakeStorage | null>
 
     fetchStakeHolder(address: string): Promise<string | null>
 
-    // TODO
-    fetchDelegate(address: string): Promise<null>
+    fetchDelegate(address: string): Promise<DelegateStorage | null>
 
-    // TODO
-    fetchParcel(id: string): Promise<null>
+    fetchParcel(id: string): Promise<ParcelStorage | null>
 
-    // TODO
-    fetchRequest(buyer, target): Promise<null>
+    fetchRequest(buyer, target): Promise<RequestStorage | null>
 
-    // TODO
-    fetchUsage(buyer, target): Promise<null>
+    fetchUsage(buyer, target): Promise<UsageStorage | null>
 }
 
 declare const url: {
@@ -285,7 +281,31 @@ interface Validator {
     proposer_priority: string
 }
 
-interface Staked {
+interface StakeStorage {
     validator: number[]
     amount: string
+}
+
+interface DelegateStorage {
+    delegate: string
+    amount: string
+}
+
+interface ParcelStorage {
+    owner: string
+    custody: string
+    proxy_account: string
+    extra?: object
+}
+
+interface RequestStorage {
+    payment: string
+    dealer?: string
+    dealer_fee?: string
+    extra?: object
+}
+
+interface UsageStorage {
+    custody: string
+    extra?: object
 }
