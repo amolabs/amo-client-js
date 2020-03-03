@@ -38,6 +38,40 @@ declare class AmoClient {
     fetchRequest(buyer, target): Promise<RequestStorage | null>
 
     fetchUsage(buyer, target): Promise<UsageStorage | null>
+
+    transfer(recipient: string, amount: string, sender: Sender): Promise<TxResult>
+
+    delegate(delegatee: string, amount: string, sender: Sender): Promise<TxResult>
+
+    retract(amount: string, sender: Sender): Promise<TxResult>
+
+    registerParcel(parcel: Parcel, sender: Sender): Promise<TxResult>
+
+    discardParcel(parcel: Parcel, sender: Sender): Promise<TxResult>
+
+    requestParcel(parcel: Parcel, payment: string, sender: Sender): Promise<TxResult>
+
+    cancelRequest(parcel: Parcel, sender: Sender): Promise<TxResult>
+
+    grantParcel(parcel: Parcel, grantee: Grantee, custody: Buffer, sender: Sender): Promise<TxResult>
+
+    revokeGrant(parcel: Parcel, grantee: Grantee, sender: Sender): Promise<TxResult>
+}
+
+// TODO Check type
+interface TxResult {
+
+}
+
+// FIXME Check type
+interface Grantee {
+    address: string
+}
+
+// FIXME Check type
+interface Parcel {
+    id: string
+    custody: Buffer
 }
 
 declare const url: {
