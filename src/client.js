@@ -46,7 +46,7 @@ export class AmoClient {
   constructor (config) {
     if (!config) {
       config = {
-        baseURL: url.BC_NODE_AMO_TOKYO
+        baseURL: `http://${url.BC_NODE_AMO_TOKYO}`
       }
     }
 
