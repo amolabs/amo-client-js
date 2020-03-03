@@ -12,11 +12,35 @@ declare class AmoClient {
 
     fetchRecentBlockHeaders(): Promise<FormattedBlockHeader[]>
 
-    fetchTx(hash): Promise<Tx>
+    fetchTx(hash: string): Promise<Tx>
 
     fetchRecentTxs(): Promise<Tx[]>
 
     fetchValidators(): Promise<Validator[]>
+
+    fetchTxsByAccount(address: string): Promise<Tx[]>
+
+    fetchTxsByParcel(parcel: string): Promise<Tx[]>
+
+    abciQuery<T>(type: string, params: object | string): Promise<T>
+
+    fetchBalance(address: string): Promise<string>
+
+    fetchStake(address: string): Promise<Staked | null>
+
+    fetchStakeHolder(address: string): Promise<string>
+
+    // TODO
+    fetchDelegate(address: string): Promise<null>
+
+    // TODO
+    fetchParcel(id: string): Promise<null>
+
+    // TODO
+    fetchRequest(buyer, target): Promise<null>
+
+    // TODO
+    fetchUsage(buyer, target): Promise<null>
 }
 
 declare const url: {
@@ -114,4 +138,9 @@ interface Validator {
     pub_key: PubKey
     voting_power: string
     proposer_priority: string
+}
+
+interface Staked {
+    validator: number[]
+    amount: string
 }
