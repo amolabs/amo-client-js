@@ -358,3 +358,13 @@ interface Account {
     address: string
     ecKey: ec.KeyPair
 }
+
+interface SyncInfo {
+    latest_block_height: string
+    latest_block_hash: string
+}
+
+interface StatusResponse {
+    sync_info: SyncInfo
+    // TODO
+}

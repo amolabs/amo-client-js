@@ -232,20 +232,20 @@ export class AmoClient {
       .get('/status')
       .then(({ data }) => {
         tx.fee = '0'
-        tx.last_height = data.result.sync_info.lastest_block_height
-        const rawTx = JSON.stringify(this._singTx(tx, ecKey))
+        tx.last_height = data.result.sync_info.latest_block_height
+        const rawTx = JSON.stringify(this._signTx(tx, ecKey))
         return this.sendRawTx(rawTx)
       })
   }
 
-  _sing (sb, key) {
+  _sign (sb, key) {
     const sig = key.sign(sha256(sb))
     const r = ('0000' + sig.r.toString('hex')).slice(-64)
     const s = ('0000' + sig.s.toString('hex')).slice(-64)
     return r + s
   }
 
-  _singTx (tx, key) {
+  _signTx (tx, key) {
     const txToSign = {
       type: tx.type,
       sender: tx.sender,
@@ -254,7 +254,7 @@ export class AmoClient {
       payload: tx.payload
     }
 
-    const sig = this._sing(JSON.stringify(txToSign), key)
+    const sig = this._sign(JSON.stringify(txToSign), key)
     txToSign.signature = {
       pubKey: key.getPublic().encode('hex'),
       sig_bytes: sig
