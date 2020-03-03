@@ -162,7 +162,7 @@ export class AmoClient {
       })
   }
 
-  fetchTxsByAccount (address) {
+  fetchTxsByAddress (address) {
     return this._client
       .get(`/tx_search?query="default.tx.sender='${address}'"`)
       .then(({ data }) => {
@@ -200,7 +200,7 @@ export class AmoClient {
   }
 
   fetchBalance (address) {
-    return this._buildAbciQuery('balance', address, 0)
+    return this._buildAbciQuery('balance', address, '0')
   }
 
   fetchStake (address) {
@@ -208,7 +208,7 @@ export class AmoClient {
   }
 
   fetchStakeHolder (address) {
-    return this._buildAbciQuery('validator', address, 0)
+    return this._buildAbciQuery('validator', address, null)
   }
 
   fetchDelegate (address) {

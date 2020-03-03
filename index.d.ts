@@ -1,6 +1,10 @@
 import {AxiosRequestConfig} from "axios"
 import {ec} from "elliptic"
 
+type HexEncodedAddress = string
+type HexEncodedParcelId = string
+type DecimalString = string
+
 declare class AmoClient {
     constructor(config?: AxiosRequestConfig, storageClient?: AxiosRequestConfig)
 
@@ -18,37 +22,37 @@ declare class AmoClient {
 
     fetchValidators(): Promise<Validator[]>
 
-    fetchTxsByAccount(address: string): Promise<Tx[]>
+    fetchTxsByAddress(address: HexEncodedAddress): Promise<Tx[]>
 
-    fetchTxsByParcel(parcel: string): Promise<Tx[]>
+    fetchTxsByParcel(parcel: HexEncodedParcelId): Promise<Tx[]>
 
     abciQuery<T>(type: string, params: object | string): Promise<T>
 
-    fetchBalance(address: string): Promise<string>
+    fetchBalance(address: HexEncodedAddress): Promise<string>
 
-    fetchStake(address: string): Promise<StakeStorage | null>
+    fetchStake(address: HexEncodedAddress): Promise<StakeStorage | null>
 
-    fetchStakeHolder(address: string): Promise<string | null>
+    fetchStakeHolder(address: HexEncodedAddress): Promise<string | null>
 
-    fetchDelegate(address: string): Promise<DelegateStorage | null>
+    fetchDelegate(address: HexEncodedAddress): Promise<DelegateStorage | null>
 
-    fetchParcel(id: string): Promise<ParcelStorage | null>
+    fetchParcel(id: HexEncodedParcelId): Promise<ParcelStorage | null>
 
-    fetchRequest(buyer, target): Promise<RequestStorage | null>
+    fetchRequest(buyer: HexEncodedAddress, target): Promise<RequestStorage | null>
 
-    fetchUsage(buyer, target): Promise<UsageStorage | null>
+    fetchUsage(buyer: HexEncodedAddress, target): Promise<UsageStorage | null>
 
-    transfer(recipient: string, amount: string, sender: Account): Promise<TxResult>
+    transfer(recipient: HexEncodedAddress, amount: DecimalString, sender: Account): Promise<TxResult>
 
-    delegate(delegatee: string, amount: string, sender: Account): Promise<TxResult>
+    delegate(delegatee: HexEncodedAddress, amount: DecimalString, sender: Account): Promise<TxResult>
 
-    retract(amount: string, sender: Account): Promise<TxResult>
+    retract(amount: DecimalString, sender: Account): Promise<TxResult>
 
     registerParcel(parcel: Parcel, sender: Account): Promise<TxResult>
 
     discardParcel(parcel: Parcel, sender: Account): Promise<TxResult>
 
-    requestParcel(parcel: Parcel, payment: string, sender: Account): Promise<TxResult>
+    requestParcel(parcel: Parcel, payment: DecimalString, sender: Account): Promise<TxResult>
 
     cancelRequest(parcel: Parcel, sender: Account): Promise<TxResult>
 
@@ -75,7 +79,7 @@ interface TxProcess {
 }
 
 interface Grantee {
-    address: string
+    address: HexEncodedAddress
 }
 
 interface Parcel {
@@ -112,20 +116,20 @@ interface BlockId {
 
 interface BlockHeader {
     chain_id: string
-    height: string
+    height: DecimalString
     time: string
-    num_txs: string
-    total_txs: string
-    proposer_address: string
+    num_txs: DecimalString
+    total_txs: DecimalString
+    proposer_address: HexEncodedAddress
 }
 
 interface FormattedBlockHeader {
     chain: string,
     hash: string,
-    height: string,
-    proposer: string,
-    numTx: string,
-    timestamp: string
+    height: DecimalString,
+    proposer: HexEncodedAddress,
+    numTx: DecimalString,
+    timestamp: DecimalString
 }
 
 interface FormattedBlock extends FormattedBlockHeader {
@@ -134,7 +138,7 @@ interface FormattedBlock extends FormattedBlockHeader {
 
 interface Tx {
     type: 'transfer' | 'stake' | 'withdraw' | 'delegate' | 'retract' | 'propose' | 'vote' | 'setup' | 'close' | 'register' | 'request' | 'grant' | 'discard' | 'cancel' | 'revoke' | 'issue' | 'lock' | 'burn'
-    sender: string,
+    sender: HexEncodedAddress,
     fee: string,
     last_height: string,
     payload: object
@@ -146,8 +150,8 @@ interface TransferTx extends Tx {
     type: 'transfer'
     payload: {
         udc?: string
-        to: string
-        amount: string
+        to: HexEncodedAddress
+        amount: DecimalString
     }
 }
 
@@ -155,29 +159,29 @@ interface StakeTx extends Tx {
     type: 'stake'
     payload: {
         validator: string,
-        amount: string
+        amount: DecimalString
     }
 }
 
 interface WithdrawTx extends Tx {
     type: 'withdraw'
     payload: {
-        amount: string
+        amount: DecimalString
     }
 }
 
 interface DelegateTx extends Tx {
     type: 'delegate'
     payload: {
-        to: string
-        amount: string
+        to: HexEncodedAddress
+        amount: DecimalString
     }
 }
 
 interface RetractTx extends Tx {
     type: 'retract'
     payload: {
-        amount: string
+        amount: DecimalString
     }
 }
 
@@ -230,7 +234,7 @@ interface RequestTx extends Tx {
     payload: {
         target: string
         payment: string
-        dealer?: string
+        dealer?: HexEncodedAddress
         dealer_fee?: string
         extra?: object
     }
@@ -274,7 +278,7 @@ interface IssueTx extends Tx {
         udc: string
         desc: string
         operations: string[]
-        amount: string
+        amount: DecimalString
     }
 }
 
@@ -282,8 +286,8 @@ interface LockTx extends Tx {
     type: 'lock'
     payload: {
         udc: string
-        holder: string
-        amount: string
+        holder: HexEncodedAddress
+        amount: DecimalString
     }
 }
 
@@ -291,7 +295,7 @@ interface BurnTx extends Tx {
     type: 'burn'
     payload: {
         udc: string
-        amount: string
+        amount: DecimalString
     }
 }
 
@@ -319,32 +323,32 @@ interface ValidatorsResponse {
 }
 
 interface Validator {
-    address: string
+    address: HexEncodedAddress
     pub_key: PubKey
-    voting_power: string
-    proposer_priority: string
+    voting_power: DecimalString
+    proposer_priority: DecimalString
 }
 
 interface StakeStorage {
     validator: number[]
-    amount: string
+    amount: DecimalString
 }
 
 interface DelegateStorage {
-    delegatee: string
-    amount: string
+    delegatee: HexEncodedAddress
+    amount: DecimalString
 }
 
 interface ParcelStorage {
-    owner: string
+    owner: HexEncodedAddress
     custody: string
-    proxy_account: string
+    proxy_account?: HexEncodedAddress
     extra?: object
 }
 
 interface RequestStorage {
-    payment: string
-    dealer?: string
+    payment: HexEncodedAddress
+    dealer?: DecimalString
     dealer_fee?: string
     extra?: object
 }
@@ -355,13 +359,13 @@ interface UsageStorage {
 }
 
 interface Account {
-    address: string
+    address: HexEncodedAddress
     ecKey: ec.KeyPair
 }
 
 interface SyncInfo {
-    latest_block_height: string
-    latest_block_hash: string
+    latest_block_height: DecimalString
+    latest_block_hash: DecimalString
 }
 
 interface StatusResponse {
