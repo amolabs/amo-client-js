@@ -13,7 +13,7 @@
   "files": [
     "dist",
     "index.d.ts",
-    "README*.md"
+    "README.ko.md"
   ],
   "repository": {
     "type": "git",
