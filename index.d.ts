@@ -28,11 +28,11 @@ declare class AmoClient {
 
     abciQuery<T>(type: string, params: object | string): Promise<T>
 
-    fetchBalance(address: HexEncodedAddress): Promise<string>
+    fetchBalance(address: HexEncodedAddress): Promise<DecimalString>
 
     fetchStake(address: HexEncodedAddress): Promise<StakeStorage | null>
 
-    fetchStakeHolder(address: HexEncodedAddress): Promise<string | null>
+    fetchStakeHolder(address: HexEncodedAddress): Promise<HexEncodedAddress | null>
 
     fetchDelegate(address: HexEncodedAddress): Promise<DelegateStorage | null>
 
@@ -65,15 +65,15 @@ interface TxResult {
     check_tx: TxProcess
     deliver_tx: TxProcess
     hash: string
-    height: string
+    height: DecimalString
 }
 
 interface TxProcess {
     code: number
     data: string
     log: string
-    gas_used: number
-    gas_wanted: number
+    gas_used: DecimalString
+    gas_wanted: DecimalString
     info: string
     tags: object
 }
