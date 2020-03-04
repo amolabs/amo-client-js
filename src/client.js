@@ -361,6 +361,19 @@ export class AmoClient {
     }, 'transfer', sender)
   }
 
+  sendStake (validatorAddress, amount, sender) {
+    return this._buildTxSend({
+      amount,
+      validator: validatorAddress
+    }, 'stake', sender)
+  }
+
+  sendWithdraw (amount, sender) {
+    return this._buildTxSend({
+      amount
+    }, 'withdraw', sender)
+  }
+
   sendDelegate (delegatee, amount, sender) {
     return this._buildTxSend({
       amount,
@@ -372,6 +385,36 @@ export class AmoClient {
     return this._buildTxSend({
       amount
     }, 'retract', sender)
+  }
+
+  sendPropose (draftId, config, desc, sender) {
+    return this._buildTxSend({
+      draftId,
+      config,
+      desc
+    }, 'propose', sender)
+  }
+
+  sendVote (draftId, approve, sender) {
+    return this._buildTxSend({
+      draftId,
+      approve
+    }, 'vote', sender)
+  }
+
+  sendSetup (storageId, url, registrationFee, hostingFee, sender) {
+    return this._buildTxSend({
+      url,
+      storage: storageId,
+      registration_fee: registrationFee,
+      hosting_fee: hostingFee
+    }, 'setup', sender)
+  }
+
+  sendClose (storageId, sender) {
+    return this._buildTxSend({
+      storage: storageId
+    }, 'close', sender)
   }
 
   sendRegisterParcel (parcel, sender) {
@@ -421,6 +464,30 @@ export class AmoClient {
       target: parcel.id.toUpperCase(),
       grantee: grantee.address.toUpperCase()
     }, 'revoke', sender)
+  }
+
+  sendIssue (udcId, desc, operators, amount, sender) {
+    return this._buildTxSend({
+      desc,
+      operators,
+      amount,
+      udc: udcId
+    }, 'issue', sender)
+  }
+
+  sendLock (udcId, holder, amount, sender) {
+    return this._buildTxSend({
+      holder,
+      amount,
+      udc: udcId
+    }, 'lock', sender)
+  }
+
+  sendBurn (udcId, amount, sender) {
+    return this._buildTxSend({
+      amount,
+      udc: udcId
+    }, 'burn', sender)
   }
 
   authParcel (address, operation) {
@@ -501,6 +568,6 @@ export class AmoClient {
       })
   }
 
-  // TODO
+// TODO
   removeParcel (id) { return Promise.reject(new Error('implement me')) }
 }

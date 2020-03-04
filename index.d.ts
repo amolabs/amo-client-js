@@ -39,10 +39,10 @@ declare class AmoClient {
     queryValidator(address: HexEncodedAddress): Promise<HexEncodedAddress | null>
 
     // TODO return type
-    queryDraft (draftId: string): Promise<object>
+    queryDraft(draftId: string): Promise<object>
 
     // TODO return type
-    queryStorage (storageId: string): Promise<object>
+    queryStorage(storageId: string): Promise<object>
 
     queryParcel(id: HexEncodedParcelId): Promise<ParcelStorage | null>
 
@@ -56,13 +56,25 @@ declare class AmoClient {
 
     queryInc(height: DecimalString, address: HexEncodedAddress): Promise<IncentiveRecord[]>
 
-    /// Send transaction
+    /// Send transaction https://github.com/amolabs/docs/blob/master/protocol.md#transaction
 
     sendTransfer(recipient: HexEncodedAddress, amount: DecimalString, sender: Account): Promise<TxResult>
+
+    sendStake(validatorAddress: HexEncodedAddress, amount: DecimalString, sender: Account)
+
+    sendWithdraw(amount: DecimalString, sender: Account)
 
     sendDelegate(delegatee: HexEncodedAddress, amount: DecimalString, sender: Account): Promise<TxResult>
 
     sendRetract(amount: DecimalString, sender: Account): Promise<TxResult>
+
+    sendPropose(draftId: string, config: object, desc: string, sender: Account): Promise<TxResult>
+
+    sendVote(draftId: string, approve: boolean, sender: Account): Promise<TxResult>
+
+    sendSetup(storageId: string, url: string, registrationFee: DecimalString, hostingFee: DecimalString, sender: Account): Promise<TxResult>
+
+    sendClose(storageId: string, sender: Account): Promise<TxResult>
 
     sendRegisterParcel(parcel: Parcel, sender: Account): Promise<TxResult>
 
@@ -75,6 +87,12 @@ declare class AmoClient {
     sendGrantParcel(parcel: Parcel, grantee: Grantee, custody: Buffer, sender: Account): Promise<TxResult>
 
     sendRevokeGrant(parcel: Parcel, grantee: Grantee, sender: Account): Promise<TxResult>
+
+    sendIssue(udcId: string, desc: string, operators: HexEncodedAddress[], amount: DecimalString, sender: Account): Promise<TxResult>
+
+    sendLock(udcId: string, holder: HexEncodedAddress, amount: DecimalString, sender: Account): Promise<TxResult>
+
+    sendBurn(udcId: string, amount: DecimalString, sender: Account): Promise<TxResult>
 
     /// Parcel control
 
