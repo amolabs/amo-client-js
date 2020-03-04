@@ -18,8 +18,6 @@ declare class AmoClient {
 
     fetchTx(hash: string): Promise<Tx>
 
-    fetchRecentTxs(): Promise<Tx[]>
-
     fetchValidators(): Promise<Validator[]>
 
     fetchTxsByAddress(address: HexEncodedAddress): Promise<Tx[]>

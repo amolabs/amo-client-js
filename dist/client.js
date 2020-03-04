@@ -18,7 +18,9 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 const url = {
-  BC_NODE_AMO_TOKYO: '139.162.116.176:26657'
+  BC_NODE_AMO_TOKYO: 'http://139.162.116.176:26657',
+  BC_NODE_WS: 'ws://139.162.116.176:26657/websocket',
+  AMO_STORAGE: 'http://139.162.111.178:5000'
 };
 exports.url = url;
 
@@ -33,11 +35,15 @@ function formatBlockHeader(blk) {
   };
 }
 
+function sha256(b) {
+  return (0, _crypto.createHash)('sha256').update(b).digest();
+}
+
 function formatBlock(blk) {
   return _objectSpread({}, formatBlockHeader(blk.block_meta), {
     txs: blk.block.data.txs.map(tx => {
       const decoded = Buffer.from(tx, 'base64');
-      const hash = (0, _crypto.createHash)('sha256').update(decoded).digest().toString('hex');
+      const hash = sha256(decoded).toString('hex');
       return _objectSpread({}, JSON.parse(decoded.toString()), {
         hash
       });
@@ -45,21 +51,92 @@ function formatBlock(blk) {
   });
 }
 
+function decodeBase64(encoded) {
+  return Buffer.from(encoded, 'base64').toString();
+}
+
+function fromBase64(encoded) {
+  return JSON.parse(decodeBase64(encoded));
+}
+
+function parseTxs(data) {
+  if (!data.error && 'txs' in data.result) {
+    return data.result.txs.map(tx => {
+      return fromBase64(tx.tx);
+    });
+  } else {
+    return [];
+  }
+}
+
 class AmoClient {
-  constructor(config) {
+  constructor(config, storageConfig, wsURL) {
     _defineProperty(this, "_client", void 0);
+
+    _defineProperty(this, "_storageClient", void 0);
+
+    _defineProperty(this, "_wsURL", void 0);
+
+    _defineProperty(this, "_ws", void 0);
 
     if (!config) {
       config = {
-        baseURL: `http://${url.BC_NODE_AMO_TOKYO}`
+        baseURL: url.BC_NODE_AMO_TOKYO
       };
     }
 
     if (!config.baseURL) {
-      config.baseURL = `http://${url.BC_NODE_AMO_TOKYO}`;
+      config.baseURL = url.BC_NODE_AMO_TOKYO;
+    }
+
+    if (!storageConfig) {
+      storageConfig = {
+        baseURL: url.AMO_STORAGE,
+        headers: {
+          'content-type': 'application/json'
+        }
+      };
+    }
+
+    if (!storageConfig.baseURL) {
+      storageConfig.baseURL = url.AMO_STORAGE;
+    }
+
+    if (!storageConfig.headers) {
+      storageConfig.headers = {
+        'content-type': 'application/json'
+      };
     }
 
     this._client = _axios.default.create(config);
+    this._storageClient = _axios.default.create(storageConfig);
+    this._wsURL = wsURL || url.BC_NODE_WS;
+  }
+
+  startSubscribe(onNewBlock, onError) {
+    this._ws = new WebSocket(this._wsURL);
+
+    this._ws.onopen = () => {
+      this._ws.send(JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'subscribe',
+        id: 'newBlock',
+        params: {
+          query: 'tm.event=\'NewBlock\''
+        }
+      }));
+    };
+
+    this._ws.onmessage = e => {
+      const message = JSON.parse(e.data);
+
+      if (message.id === 'newBlock#event') {
+        const blockHeader = message.result.data.value.block.header;
+        onNewBlock(blockHeader.height);
+      }
+    };
+
+    this._ws.onerror = onError;
   }
 
   fetchLastBlock() {
@@ -126,6 +203,291 @@ class AmoClient {
     }) => {
       return result.validators;
     });
+  }
+
+  fetchTxsByAddress(address) {
+    return this._client.get(`/tx_search?query="default.tx.sender='${address}'"`).then(({
+      data
+    }) => {
+      return parseTxs(data);
+    });
+  }
+
+  fetchTxsByParcel(parcel) {
+    return this._client.get(`/tx_search?query="parcel.id='${parcel}'"`).then(({
+      data
+    }) => {
+      return parseTxs(data);
+    });
+  }
+
+  abciQuery(type, params) {
+    const data = JSON.stringify(params).replace(/"/g, '\\"');
+    return this._client.get(`/abci_query?path="/${type}"&data="${data}"`).then(({
+      data
+    }) => {
+      if (data.error) {
+        return Promise.reject(data.error);
+      }
+
+      if (data.result.response.code) {
+        return Promise.reject(data.result.response.log);
+      }
+
+      return data.result.response.value;
+    });
+  }
+
+  _buildAbciQuery(type, param, fallbackValue) {
+    return this.abciQuery(type, param).then(fromBase64).catch(() => Promise.resolve(fallbackValue));
+  }
+
+  fetchBalance(address) {
+    return this._buildAbciQuery('balance', address, '0');
+  }
+
+  fetchStake(address) {
+    return this._buildAbciQuery('stake', address, null);
+  }
+
+  fetchStakeHolder(address) {
+    return this._buildAbciQuery('validator', address, null);
+  }
+
+  fetchDelegate(address) {
+    return this._buildAbciQuery('delegate', address, null);
+  }
+
+  fetchParcel(id) {
+    return this._buildAbciQuery('parcel', id, null);
+  }
+
+  fetchRequest(buyer, target) {
+    return this._buildAbciQuery('request', {
+      buyer,
+      target
+    }, null);
+  }
+
+  fetchUsage(buyer, target) {
+    return this._buildAbciQuery('usage', {
+      buyer,
+      target
+    }, null);
+  }
+
+  sendTx(tx, ecKey) {
+    return this._client.get('/status').then(({
+      data
+    }) => {
+      tx.fee = '0';
+      tx.last_height = data.result.sync_info.latest_block_height;
+      const rawTx = JSON.stringify(this._signTx(tx, ecKey));
+      return this.sendRawTx(rawTx);
+    });
+  }
+
+  _sign(sb, key) {
+    const sig = key.sign(sha256(sb));
+    const r = ('0000' + sig.r.toString('hex')).slice(-64);
+    const s = ('0000' + sig.s.toString('hex')).slice(-64);
+    return r + s;
+  }
+
+  _signTx(tx, key) {
+    const txToSign = {
+      type: tx.type,
+      sender: tx.sender,
+      fee: tx.fee,
+      last_height: tx.last_height,
+      payload: tx.payload
+    };
+
+    const sig = this._sign(JSON.stringify(txToSign), key);
+
+    txToSign.signature = {
+      pubKey: key.getPublic().encode('hex'),
+      sig_bytes: sig
+    };
+    return txToSign;
+  }
+
+  sendRawTx(tx) {
+    const escaped = tx.replace(/"/g, '\\"');
+    return this._client.post(`/broadcast_tx_commit?tx="${escaped}"`).then(({
+      data
+    }) => {
+      if (data.error) {
+        return Promise.reject(data.error);
+      } else if (data.result.check_tx.code > 0) {
+        console.log('check_tx error:', data.result.check_tx.code);
+        console.log(data.result.check_tx.info);
+        return Promise.reject(data.result.check_tx);
+      } else if (data.result.deliver_tx.code > 0) {
+        console.log('deliver_tx error:', data.result.deliver_tx.code);
+        console.log(data.result.deliver_tx.info);
+        return Promise.reject(data.result.deliver_tx);
+      } else {
+        return data;
+      }
+    });
+  }
+
+  _buildTxSend(payload, type, sender) {
+    if (!sender || !sender.ecKey) {
+      return Promise.reject('no sender key');
+    }
+
+    const tx = {
+      type,
+      payload,
+      sender: sender.address.toUpperCase()
+    };
+    return this.sendTx(tx, sender.ecKey);
+  }
+
+  transfer(recipient, amount, sender) {
+    return this._buildTxSend({
+      amount,
+      to: recipient.toUpperCase()
+    }, 'transfer', sender);
+  }
+
+  delegate(delegatee, amount, sender) {
+    return this._buildTxSend({
+      amount,
+      to: delegatee.toUpperCase()
+    }, 'delegate', sender);
+  }
+
+  retract(amount, sender) {
+    return this._buildTxSend({
+      amount
+    }, 'retract', sender);
+  }
+
+  registerParcel(parcel, sender) {
+    return this._buildTxSend({
+      target: parcel.id.toUpperCase(),
+      custody: parcel.custody.toString('hex').toUpperCase()
+    }, 'register', sender);
+  }
+
+  discardParcel(parcel, sender) {
+    return this._buildTxSend({
+      target: parcel.id.toUpperCase()
+    }, 'discard', sender);
+  }
+
+  requestParcel(parcel, payment, sender) {
+    return this._buildTxSend({
+      payment,
+      target: parcel.id.toUpperCase()
+    }, 'request', sender);
+  }
+
+  cancelRequest(parcel, sender) {
+    return this._buildTxSend({
+      target: parcel.id.toUpperCase()
+    }, 'cancel', sender);
+  }
+
+  grantParcel(parcel, grantee, custody, sender) {
+    return this._buildTxSend({
+      target: parcel.id.toUpperCase(),
+      grantee: grantee.address.toUpperCase(),
+      custody: custody.toString('hex').toUpperCase()
+    }, 'grant', sender);
+  }
+
+  revokeGrant(parcel, grantee, sender) {
+    return this._buildTxSend({
+      target: parcel.id.toUpperCase(),
+      grantee: grantee.address.toUpperCase()
+    }, 'revoke', sender);
+  }
+
+  authParcel(address, operation) {
+    return this._storageClient.post('/api/v1/auth', {
+      user: address,
+      operation
+    }).then(({
+      data
+    }) => {
+      if ('error' in data) {
+        return Promise.reject(data.error);
+      } else {
+        return data.token;
+      }
+    });
+  }
+
+  _makeAuthHeaders(token, account) {
+    return {
+      'X-Auth-Token': token,
+      'X-Public-Key': account.ecKey.getPublic().encode('hex'),
+      'X-Signature': this._sign(token, account.ecKey)
+    };
+  }
+
+  uploadParcel(owner, content) {
+    return this.authParcel(owner.address, {
+      name: 'upload',
+      hash: sha256(content).toString('hex')
+    }).then(token => {
+      return this._storageClient.post('/api/v1/parcels', {
+        owner: owner.address,
+        metadata: {
+          owner: owner.address
+        },
+        data: content.toString('hex')
+      }, {
+        headers: this._makeAuthHeaders(token, owner)
+      });
+    }).then(({
+      data
+    }) => {
+      if ('error' in data) {
+        return Promise.reject(data.error);
+      }
+
+      return data.id;
+    });
+  }
+
+  downloadParcel(buyer, id) {
+    return this.authParcel(buyer.address, {
+      name: 'download',
+      id
+    }).then(token => {
+      return this._storageClient.get(`/api/v1/parcels/${id}`, {
+        headers: this._makeAuthHeaders(token, buyer)
+      });
+    }).then(({
+      data
+    }) => {
+      if ('error' in data) {
+        return Promise.reject(data.error);
+      }
+
+      return data.data;
+    });
+  }
+
+  inspectParcel(id) {
+    return this._storageClient.get(`/api/v1/parcels/${id}?key=metadata`).then(({
+      data
+    }) => {
+      if ('error' in data) {
+        return Promise.reject(data.error);
+      }
+
+      return data.metadata;
+    });
+  }
+
+  removeParcel(id) {
+    return Promise.reject('implement me');
   }
 
 }
