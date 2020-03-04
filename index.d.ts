@@ -6,7 +6,7 @@ type HexEncodedParcelId = string
 type DecimalString = string
 
 declare class AmoClient {
-    constructor(config?: AxiosRequestConfig, storageClient?: AxiosRequestConfig)
+    constructor(config?: AxiosRequestConfig, storageClient?: AxiosRequestConfig, wsURL?: string)
 
     fetchLastBlock(): Promise<FormattedBlockHeader>
 
@@ -59,6 +59,19 @@ declare class AmoClient {
     grantParcel(parcel: Parcel, grantee: Grantee, custody: Buffer, sender: Account): Promise<TxResult>
 
     revokeGrant(parcel: Parcel, grantee: Grantee, sender: Account): Promise<TxResult>
+
+    authParcel(address: HexEncodedAddress, operation: object): Promise<string>
+
+    uploadParcel(owner: Account, content: Buffer): Promise<HexEncodedParcelId>
+
+    // FIXME return type
+    downloadParcel(buyer: Account, id: HexEncodedParcelId): Promise<object>
+
+    // FIXME return type
+    inspectParcel(id: HexEncodedParcelId): Promise<object>
+
+    // FIXME return type
+    removeParcel(id: HexEncodedParcelId): Promise<object>
 }
 
 interface TxResult {
