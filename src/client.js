@@ -3,6 +3,7 @@ import { createHash } from 'crypto'
 
 export const url = {
   BC_NODE_AMO_TOKYO: 'http://139.162.116.176:26657',
+  BC_NODE_WS: 'ws://139.162.116.176:26657/websocket',
   AMO_STORAGE: 'http://139.162.111.178:5000'
 }
 
@@ -66,8 +67,10 @@ function parseTxs (data) {
 export class AmoClient {
   _client
   _storageClient
+  _wsURL
+  _ws
 
-  constructor (config, storageConfig) {
+  constructor (config, storageConfig, wsURL) {
     if (!config) {
       config = {
         baseURL: url.BC_NODE_AMO_TOKYO
@@ -99,6 +102,35 @@ export class AmoClient {
 
     this._client = axios.create(config)
     this._storageClient = axios.create(storageConfig)
+    this._wsURL = wsURL || url.BC_NODE_WS
+  }
+
+  startSubscribe (onNewBlock, onError) {
+    if (WebSocket === undefined) {
+      throw new Error('websocket not supported')
+    }
+
+    this._ws = new WebSocket(this._wsURL)
+    this._ws.onopen = () => {
+      this._ws.send(
+        JSON.stringify({
+          jsonrpc: '2.0',
+          method: 'subscribe',
+          id: 'newBlock',
+          params: {
+            query: 'tm.event=\'NewBlock\''
+          }
+        })
+      )
+    }
+    this._ws.onmessage = e => {
+      const message = JSON.parse(e.data)
+      if (message.id === 'newBlock#event') {
+        const blockHeader = message.result.data.value.block.header
+        onNewBlock(blockHeader.height)
+      }
+    }
+    this._ws.onerror = onError
   }
 
   fetchLastBlock () {
@@ -162,9 +194,9 @@ export class AmoClient {
       })
   }
 
-  fetchTxsByAccount (address) {
+  fetchTxsBySender (sender) {
     return this._client
-      .get(`/tx_search?query="default.tx.sender='${address}'"`)
+      .get(`/tx_search?query="default.tx.sender='${sender}'"`)
       .then(({ data }) => {
         return parseTxs(data)
       })
@@ -200,7 +232,7 @@ export class AmoClient {
   }
 
   fetchBalance (address) {
-    return this._buildAbciQuery('balance', address, 0)
+    return this._buildAbciQuery('balance', address, '0')
   }
 
   fetchStake (address) {
@@ -208,7 +240,7 @@ export class AmoClient {
   }
 
   fetchStakeHolder (address) {
-    return this._buildAbciQuery('validator', address, 0)
+    return this._buildAbciQuery('validator', address, null)
   }
 
   fetchDelegate (address) {
@@ -286,7 +318,7 @@ export class AmoClient {
 
   _buildTxSend (payload, type, sender) {
     if (!sender || !sender.ecKey) {
-      return Promise.reject('no sender key')
+      return Promise.reject(new Error('no sender key'))
     }
 
     const tx = {
@@ -308,7 +340,7 @@ export class AmoClient {
   delegate (delegatee, amount, sender) {
     return this._buildTxSend({
       amount,
-      to: delegatee.toUpperCase(),
+      to: delegatee.toUpperCase()
     }, 'delegate', sender)
   }
 
@@ -334,7 +366,7 @@ export class AmoClient {
   requestParcel (parcel, payment, sender) {
     return this._buildTxSend({
       payment,
-      target: parcel.id.toUpperCase(),
+      target: parcel.id.toUpperCase()
     }, 'request', sender)
   }
 
@@ -367,4 +399,84 @@ export class AmoClient {
     }, 'revoke', sender)
   }
 
+  authParcel (address, operation) {
+    return this._storageClient
+      .post('/api/v1/auth', {
+        user: address,
+        operation
+      })
+      .then(({ data }) => {
+        if ('error' in data) {
+          return Promise.reject(data.error)
+        } else {
+          return data.token
+        }
+      })
+  }
+
+  _makeAuthHeaders (token, account) {
+    return {
+      'X-Auth-Token': token,
+      'X-Public-Key': account.ecKey.getPublic().encode('hex'),
+      'X-Signature': this._sign(token, account.ecKey)
+    }
+  }
+
+  uploadParcel (owner, content) {
+    return this.authParcel(owner.address, {
+      name: 'upload',
+      hash: sha256(content).toString('hex')
+    })
+      .then((token) => {
+        return this._storageClient
+          .post('/api/v1/parcels', {
+            owner: owner.address,
+            metadata: {
+              owner: owner.address
+            },
+            data: content.toString('hex')
+          }, {
+            headers: this._makeAuthHeaders(token, owner)
+          })
+      })
+      .then(({ data }) => {
+        if ('error' in data) {
+          return Promise.reject(data.error)
+        }
+        return data.id
+      })
+  }
+
+  downloadParcel (buyer, id) {
+    return this.authParcel(buyer.address, {
+      name: 'download',
+      id
+    })
+      .then((token) => {
+        return this._storageClient
+          .get(`/api/v1/parcels/${id}`, {
+            headers: this._makeAuthHeaders(token, buyer)
+          })
+      })
+      .then(({ data }) => {
+        if ('error' in data) {
+          return Promise.reject(data.error)
+        }
+        return data.data
+      })
+  }
+
+  inspectParcel (id) {
+    return this._storageClient
+      .get(`/api/v1/parcels/${id}?key=metadata`)
+      .then(({ data }) => {
+        if ('error' in data) {
+          return Promise.reject(data.error)
+        }
+        return data.metadata
+      })
+  }
+
+  // TODO
+  removeParcel (id) { return Promise.reject(new Error('implement me')) }
 }

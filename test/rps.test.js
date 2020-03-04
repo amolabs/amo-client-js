@@ -38,8 +38,8 @@ test('fetchBalance', async (done) => {
 })
 
 test('fetchTxsByAccount', async (done) => {
-  expect((await client.fetchTxsByAccount(ADDRESS)).length).not.toBe(0)
-  expect((await client.fetchTxsByAccount(FAIL_ACCOUNT)).length).toBe(0)
+  expect((await client.fetchTxsBySender(ADDRESS)).length).not.toBe(0)
+  expect((await client.fetchTxsBySender(FAIL_ACCOUNT)).length).toBe(0)
   done()
 })
 
