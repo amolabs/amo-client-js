@@ -26,37 +26,57 @@ declare class AmoClient {
 
     abciQuery<T>(type: string, params: object | string): Promise<T>
 
-    fetchBalance(address: HexEncodedAddress): Promise<DecimalString>
+    /// ABCI Query https://github.com/amolabs/docs/blob/master/rpc.md#abci-query
 
-    fetchStake(address: HexEncodedAddress): Promise<StakeStorage | null>
+    queryConfig(): Promise<NodeConfig | null>
 
-    fetchStakeHolder(address: HexEncodedAddress): Promise<HexEncodedAddress | null>
+    queryBalance(address: HexEncodedAddress): Promise<DecimalString>
 
-    fetchDelegate(address: HexEncodedAddress): Promise<DelegateStorage | null>
+    queryStake(address: HexEncodedAddress): Promise<StakeStorage | null>
 
-    fetchParcel(id: HexEncodedParcelId): Promise<ParcelStorage | null>
+    queryDelegate(address: HexEncodedAddress): Promise<DelegateStorage | null>
 
-    fetchRequest(buyer: HexEncodedAddress, target): Promise<RequestStorage | null>
+    queryValidator(address: HexEncodedAddress): Promise<HexEncodedAddress | null>
 
-    fetchUsage(buyer: HexEncodedAddress, target): Promise<UsageStorage | null>
+    // TODO return type
+    queryDraft (draftId: string): Promise<object>
 
-    transfer(recipient: HexEncodedAddress, amount: DecimalString, sender: Account): Promise<TxResult>
+    // TODO return type
+    queryStorage (storageId: string): Promise<object>
 
-    delegate(delegatee: HexEncodedAddress, amount: DecimalString, sender: Account): Promise<TxResult>
+    queryParcel(id: HexEncodedParcelId): Promise<ParcelStorage | null>
 
-    retract(amount: DecimalString, sender: Account): Promise<TxResult>
+    queryRequest(buyer: HexEncodedAddress, target): Promise<RequestStorage | null>
 
-    registerParcel(parcel: Parcel, sender: Account): Promise<TxResult>
+    queryUsage(buyer: HexEncodedAddress, target): Promise<UsageStorage | null>
 
-    discardParcel(parcel: Parcel, sender: Account): Promise<TxResult>
+    queryIncBlock(height: DecimalString): Promise<IncentiveRecord[]>
 
-    requestParcel(parcel: Parcel, payment: DecimalString, sender: Account): Promise<TxResult>
+    queryIncAddress(address: HexEncodedAddress): Promise<IncentiveRecord[]>
 
-    cancelRequest(parcel: Parcel, sender: Account): Promise<TxResult>
+    queryInc(height: DecimalString, address: HexEncodedAddress): Promise<IncentiveRecord[]>
 
-    grantParcel(parcel: Parcel, grantee: Grantee, custody: Buffer, sender: Account): Promise<TxResult>
+    /// Send transaction
 
-    revokeGrant(parcel: Parcel, grantee: Grantee, sender: Account): Promise<TxResult>
+    sendTransfer(recipient: HexEncodedAddress, amount: DecimalString, sender: Account): Promise<TxResult>
+
+    sendDelegate(delegatee: HexEncodedAddress, amount: DecimalString, sender: Account): Promise<TxResult>
+
+    sendRetract(amount: DecimalString, sender: Account): Promise<TxResult>
+
+    sendRegisterParcel(parcel: Parcel, sender: Account): Promise<TxResult>
+
+    sendDiscardParcel(parcel: Parcel, sender: Account): Promise<TxResult>
+
+    sendRequestParcel(parcel: Parcel, payment: DecimalString, sender: Account): Promise<TxResult>
+
+    sendCancelRequest(parcel: Parcel, sender: Account): Promise<TxResult>
+
+    sendGrantParcel(parcel: Parcel, grantee: Grantee, custody: Buffer, sender: Account): Promise<TxResult>
+
+    sendRevokeGrant(parcel: Parcel, grantee: Grantee, sender: Account): Promise<TxResult>
+
+    /// Parcel control
 
     authParcel(address: HexEncodedAddress, operation: object): Promise<string>
 
@@ -70,6 +90,34 @@ declare class AmoClient {
 
     // FIXME return type
     removeParcel(id: HexEncodedParcelId): Promise<object>
+}
+
+interface NodeConfig {
+    max_validators: number,
+    weight_validator: number,
+    weight_delegator: number,
+    min_staking_unit: DecimalString,
+    blk_reward: DecimalString,
+    tx_reward: DecimalString,
+    penalty_ratio_m: number,
+    penalty_ratio_l: number,
+    laziness_counter_window: number,
+    laziness_threshold: number,
+    block_binding_window: number,
+    lockup_period: number,
+    draft_open_count: number,
+    draft_close_count: number,
+    draft_apply_count: number,
+    draft_deposit: DecimalString,
+    draft_quorum_rate: number,
+    draft_pass_rate: number,
+    draft_refund_rate: number
+}
+
+interface IncentiveRecord {
+    block_height: number
+    address: HexEncodedAddress
+    amount: DecimalString
 }
 
 interface TxResult {

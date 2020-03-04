@@ -31,9 +31,9 @@ test('fetchValidator', async (done) => {
   done()
 })
 
-test('fetchBalance', async (done) => {
-  expect(await client.fetchBalance(ADDRESS)).not.toBe('0')
-  expect(await client.fetchBalance(FAIL_ACCOUNT)).toBe('0')
+test('queryBalance', async (done) => {
+  expect(await client.queryBalance(ADDRESS)).not.toBe('0')
+  expect(await client.queryBalance(FAIL_ACCOUNT)).toBe('0')
   done()
 })
 
@@ -43,12 +43,17 @@ test('fetchTxsByAccount', async (done) => {
   done()
 })
 
-test('fetchStake', async (done) => {
-  print(await client.fetchStake(STAKE_ADDRESS))
+test('queryStake', async (done) => {
+  print(await client.queryStake(STAKE_ADDRESS))
   done()
 })
 
-test('fetchStakeHolder', async (done) => {
-  print(await client.fetchStakeHolder(VALIDATOR_ADDRESS))
+test('queryValidator', async (done) => {
+  print(await client.queryValidator(VALIDATOR_ADDRESS))
+  done()
+})
+
+test('queryIncBlock', async (done) => {
+  print(await client.queryIncBlock(10000))
   done()
 })
