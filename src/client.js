@@ -106,6 +106,10 @@ export class AmoClient {
   }
 
   startSubscribe (onNewBlock, onError) {
+    if (WebSocket === undefined) {
+      throw new Error('websocket not supported')
+    }
+
     this._ws = new WebSocket(this._wsURL)
     this._ws.onopen = () => {
       this._ws.send(
@@ -190,9 +194,9 @@ export class AmoClient {
       })
   }
 
-  fetchTxsByAddress (address) {
+  fetchTxsBySender (sender) {
     return this._client
-      .get(`/tx_search?query="default.tx.sender='${address}'"`)
+      .get(`/tx_search?query="default.tx.sender='${sender}'"`)
       .then(({ data }) => {
         return parseTxs(data)
       })
@@ -314,7 +318,7 @@ export class AmoClient {
 
   _buildTxSend (payload, type, sender) {
     if (!sender || !sender.ecKey) {
-      return Promise.reject('no sender key')
+      return Promise.reject(new Error('no sender key'))
     }
 
     const tx = {
@@ -336,7 +340,7 @@ export class AmoClient {
   delegate (delegatee, amount, sender) {
     return this._buildTxSend({
       amount,
-      to: delegatee.toUpperCase(),
+      to: delegatee.toUpperCase()
     }, 'delegate', sender)
   }
 
@@ -362,7 +366,7 @@ export class AmoClient {
   requestParcel (parcel, payment, sender) {
     return this._buildTxSend({
       payment,
-      target: parcel.id.toUpperCase(),
+      target: parcel.id.toUpperCase()
     }, 'request', sender)
   }
 
@@ -474,5 +478,5 @@ export class AmoClient {
   }
 
   // TODO
-  removeParcel (id) { return Promise.reject('implement me') }
+  removeParcel (id) { return Promise.reject(new Error('implement me')) }
 }

@@ -20,7 +20,7 @@ declare class AmoClient {
 
     fetchValidators(): Promise<Validator[]>
 
-    fetchTxsByAddress(address: HexEncodedAddress): Promise<Tx[]>
+    fetchTxsBySender(sender: HexEncodedAddress): Promise<Tx[]>
 
     fetchTxsByParcel(parcel: HexEncodedParcelId): Promise<Tx[]>
 

@@ -52,7 +52,11 @@
   "standard": {
     "parser": "babel-eslint",
     "ignore": [
-      "/test/"
+      "/test/",
+      "/dist/"
+    ],
+    "globals": [
+      "WebSocket"
     ]
   }
 }

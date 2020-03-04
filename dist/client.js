@@ -114,6 +114,10 @@ class AmoClient {
   }
 
   startSubscribe(onNewBlock, onError) {
+    if (WebSocket === undefined) {
+      throw new Error('websocket not supported');
+    }
+
     this._ws = new WebSocket(this._wsURL);
 
     this._ws.onopen = () => {
@@ -205,8 +209,8 @@ class AmoClient {
     });
   }
 
-  fetchTxsByAddress(address) {
-    return this._client.get(`/tx_search?query="default.tx.sender='${address}'"`).then(({
+  fetchTxsBySender(sender) {
+    return this._client.get(`/tx_search?query="default.tx.sender='${sender}'"`).then(({
       data
     }) => {
       return parseTxs(data);
@@ -335,7 +339,7 @@ class AmoClient {
 
   _buildTxSend(payload, type, sender) {
     if (!sender || !sender.ecKey) {
-      return Promise.reject('no sender key');
+      return Promise.reject(new Error('no sender key'));
     }
 
     const tx = {
@@ -487,7 +491,7 @@ class AmoClient {
   }
 
   removeParcel(id) {
-    return Promise.reject('implement me');
+    return Promise.reject(new Error('implement me'));
   }
 
 }
