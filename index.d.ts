@@ -28,7 +28,7 @@ declare class AmoClient {
 
     /// ABCI Query https://github.com/amolabs/docs/blob/master/rpc.md#abci-query
 
-    queryConfig(): Promise<NodeConfig | null>
+    queryConfig(): Promise<BlockchainConfig | null>
 
     queryBalance(address: HexEncodedAddress): Promise<DecimalString>
 
@@ -110,7 +110,7 @@ declare class AmoClient {
     removeParcel(id: HexEncodedParcelId): Promise<object>
 }
 
-interface NodeConfig {
+interface BlockchainConfig {
     max_validators: number,
     weight_validator: number,
     weight_delegator: number,
@@ -408,11 +408,13 @@ interface Validator {
 
 interface StakeStorage {
     validator: number[]
+    delegates: DelegateStorage[]
     amount: DecimalString
 }
 
 interface DelegateStorage {
     delegatee: HexEncodedAddress
+    delegator: HexEncodedAddress
     amount: DecimalString
 }
 
