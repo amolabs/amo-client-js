@@ -248,15 +248,15 @@ export class AmoClient {
   }
 
   queryValidator (validatorAddress) {
-    return this._buildAbciQuery('validator', address, null)
+    return this._buildAbciQuery('validator', validatorAddress, null)
   }
 
   queryDraft (draftId) {
-    return this._buildAbciQuery('draft', address, null)
+    return this._buildAbciQuery('draft', draftId, null)
   }
 
   queryStorage (storageId) {
-    return this._buildAbciQuery('storage', address, null)
+    return this._buildAbciQuery('storage', storageId, null)
   }
 
   queryParcel (id) {

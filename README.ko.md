@@ -20,7 +20,10 @@ import { AMOClient } from 'amo-client'
 const client = new AMOClient({
   baseURL: '<AMO node rpc endpoint>' // by default: url.BC_NODE_AMO_TOKYO 
   // ... extra config from AxiosRequestConfig
-})
+}, {
+  baseURL: '<AMO Storage url>'
+  // ... extra config from AxiosRequestConfig
+}, 'ws://...')
 
 (async () => {
   const lastBlock = await client.fetchLastBlock()
@@ -53,4 +56,4 @@ TBA: AMO Labs에서 제공하는 공개된 RPC 노드 주소 추가
 일기 전용인 조회 기능만 사용하는 경우는 세번째 옵션에 해당한다.
 
 ## API
-index.d.ts의 `AmoClient` 참고
+`index.d.ts`의 `AmoClient` 참고
