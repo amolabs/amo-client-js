@@ -60,9 +60,9 @@ declare class AmoClient {
 
     sendTransfer(recipient: HexEncodedAddress, amount: DecimalString, sender: Account): Promise<TxResult>
 
-    sendStake(validatorAddress: HexEncodedAddress, amount: DecimalString, sender: Account)
+    sendStake(validatorAddress: HexEncodedAddress, amount: DecimalString, sender: Account): Promise<TxResult>
 
-    sendWithdraw(amount: DecimalString, sender: Account)
+    sendWithdraw(amount: DecimalString, sender: Account): Promise<TxResult>
 
     sendDelegate(delegatee: HexEncodedAddress, amount: DecimalString, sender: Account): Promise<TxResult>
 
