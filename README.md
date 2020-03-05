@@ -20,7 +20,10 @@ import { AMOClient } from 'amo-client'
 const client = new AMOClient({
   baseURL: '<AMO node rpc endpoint>' // by default: url.BC_NODE_AMO_TOKYO 
   // ... extra config from AxiosRequestConfig
-})
+}, {
+  baseURL: '<AMO Storage url>'
+  // ... extra config from AxiosRequestConfig
+}, 'ws://...')
 
 (async () => {
   const lastBlock = await client.fetchLastBlock()
@@ -58,4 +61,4 @@ The third option is relevant when you are planning to implement read-only
 inspection features.
 
 ## API
-Check `AmoClient` in index.d.ts
+Check `AmoClient` in `index.d.ts`
