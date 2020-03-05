@@ -246,38 +246,65 @@ class AmoClient {
     return this.abciQuery(type, param).then(fromBase64).catch(() => Promise.resolve(fallbackValue));
   }
 
-  fetchBalance(address) {
+  queryConfig() {
+    return this._buildAbciQuery('config', null, null);
+  }
+
+  queryBalance(address) {
     return this._buildAbciQuery('balance', address, '0');
   }
 
-  fetchStake(address) {
+  queryStake(address) {
     return this._buildAbciQuery('stake', address, null);
   }
 
-  fetchStakeHolder(address) {
-    return this._buildAbciQuery('validator', address, null);
-  }
-
-  fetchDelegate(address) {
+  queryDelegate(address) {
     return this._buildAbciQuery('delegate', address, null);
   }
 
-  fetchParcel(id) {
+  queryValidator(validatorAddress) {
+    return this._buildAbciQuery('validator', validatorAddress, null);
+  }
+
+  queryDraft(draftId) {
+    return this._buildAbciQuery('draft', draftId, null);
+  }
+
+  queryStorage(storageId) {
+    return this._buildAbciQuery('storage', storageId, null);
+  }
+
+  queryParcel(id) {
     return this._buildAbciQuery('parcel', id, null);
   }
 
-  fetchRequest(buyer, target) {
+  queryRequest(buyer, target) {
     return this._buildAbciQuery('request', {
       buyer,
       target
     }, null);
   }
 
-  fetchUsage(buyer, target) {
+  queryUsage(buyer, target) {
     return this._buildAbciQuery('usage', {
       buyer,
       target
     }, null);
+  }
+
+  queryIncBlock(height) {
+    return this._buildAbciQuery('inc_block', height, []);
+  }
+
+  queryIncAddress(address) {
+    return this._buildAbciQuery('inc_address', address, []);
+  }
+
+  queryInc(height, address) {
+    return this._buildAbciQuery('inc', {
+      height,
+      address
+    }, []);
   }
 
   sendTx(tx, ecKey) {
@@ -350,53 +377,96 @@ class AmoClient {
     return this.sendTx(tx, sender.ecKey);
   }
 
-  transfer(recipient, amount, sender) {
+  sendTransfer(recipient, amount, sender) {
     return this._buildTxSend({
       amount,
       to: recipient.toUpperCase()
     }, 'transfer', sender);
   }
 
-  delegate(delegatee, amount, sender) {
+  sendStake(validatorAddress, amount, sender) {
+    return this._buildTxSend({
+      amount,
+      validator: validatorAddress
+    }, 'stake', sender);
+  }
+
+  sendWithdraw(amount, sender) {
+    return this._buildTxSend({
+      amount
+    }, 'withdraw', sender);
+  }
+
+  sendDelegate(delegatee, amount, sender) {
     return this._buildTxSend({
       amount,
       to: delegatee.toUpperCase()
     }, 'delegate', sender);
   }
 
-  retract(amount, sender) {
+  sendRetract(amount, sender) {
     return this._buildTxSend({
       amount
     }, 'retract', sender);
   }
 
-  registerParcel(parcel, sender) {
+  sendPropose(draftId, config, desc, sender) {
+    return this._buildTxSend({
+      draftId,
+      config,
+      desc
+    }, 'propose', sender);
+  }
+
+  sendVote(draftId, approve, sender) {
+    return this._buildTxSend({
+      draftId,
+      approve
+    }, 'vote', sender);
+  }
+
+  sendSetup(storageId, url, registrationFee, hostingFee, sender) {
+    return this._buildTxSend({
+      url,
+      storage: storageId,
+      registration_fee: registrationFee,
+      hosting_fee: hostingFee
+    }, 'setup', sender);
+  }
+
+  sendClose(storageId, sender) {
+    return this._buildTxSend({
+      storage: storageId
+    }, 'close', sender);
+  }
+
+  sendRegisterParcel(parcel, sender) {
     return this._buildTxSend({
       target: parcel.id.toUpperCase(),
       custody: parcel.custody.toString('hex').toUpperCase()
     }, 'register', sender);
   }
 
-  discardParcel(parcel, sender) {
+  sendDiscardParcel(parcel, sender) {
     return this._buildTxSend({
       target: parcel.id.toUpperCase()
     }, 'discard', sender);
   }
 
-  requestParcel(parcel, payment, sender) {
+  sendRequestParcel(parcel, payment, sender) {
     return this._buildTxSend({
       payment,
       target: parcel.id.toUpperCase()
     }, 'request', sender);
   }
 
-  cancelRequest(parcel, sender) {
+  sendCancelRequest(parcel, sender) {
     return this._buildTxSend({
       target: parcel.id.toUpperCase()
     }, 'cancel', sender);
   }
 
-  grantParcel(parcel, grantee, custody, sender) {
+  sendGrantParcel(parcel, grantee, custody, sender) {
     return this._buildTxSend({
       target: parcel.id.toUpperCase(),
       grantee: grantee.address.toUpperCase(),
@@ -404,11 +474,35 @@ class AmoClient {
     }, 'grant', sender);
   }
 
-  revokeGrant(parcel, grantee, sender) {
+  sendRevokeGrant(parcel, grantee, sender) {
     return this._buildTxSend({
       target: parcel.id.toUpperCase(),
       grantee: grantee.address.toUpperCase()
     }, 'revoke', sender);
+  }
+
+  sendIssue(udcId, desc, operators, amount, sender) {
+    return this._buildTxSend({
+      desc,
+      operators,
+      amount,
+      udc: udcId
+    }, 'issue', sender);
+  }
+
+  sendLock(udcId, holder, amount, sender) {
+    return this._buildTxSend({
+      holder,
+      amount,
+      udc: udcId
+    }, 'lock', sender);
+  }
+
+  sendBurn(udcId, amount, sender) {
+    return this._buildTxSend({
+      amount,
+      udc: udcId
+    }, 'burn', sender);
   }
 
   authParcel(address, operation) {
