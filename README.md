@@ -64,15 +64,17 @@ inspection features.
 
 Requests can be made by passing the releavant paramaters to `AmoClient`.
 
-You can check types in `index.d.ts`
+### Types
+All types in `index.d.ts` are already defined in AMO blockchain [RPC document](https://github.com/amolabs/docs/blob/master/rpc.md) 
+except parsed types such as `Tx`, `FormattedBlock` and `FormattedBlockHeader`
 
-## Types
 ```typescript
+// Type alias for convenience
 // Uppercase Hex encoded address
 type HexEncodedAddress = string
 
 // Uppercase Hex encoded id
-type HexEncodedParcelID = string
+type HexEncodedParcelId = string
 
 // DecimalString represents number as string
 // e.g 1000 -> "1000"
@@ -87,7 +89,7 @@ import { AxiosRequestConfig } from "axios"
 
 class AmoClient {
     constructor(
-        // Config for Tendermint REST API and ABCI query
+        // Config for Tendermint API and ABCI query
         nodeClient?: AxiosRequestConfig,
         // Config for AMO storage API
         storageClient?: AxiosRequestConfig,
@@ -96,11 +98,19 @@ class AmoClient {
     )
 
 ```
-Return type of AmoClient method is `Promise<T>`
+Return type of AmoClient method is `Promise<T>`. 
+When request fails, client will reject with error object in response of AMO blockchain 
+[RPC](https://github.com/amolabs/docs/blob/master/rpc.md).
 
-## Tendermint REST API
+## Tendermint API
 AMO blockchain is based on [Tendermint](https://github.com/tendermint/tendermint).
-We provide basic Tendermint [RPCs](https://docs.tendermint.com/master/rpc/).
+AmoClient provides basic Tendermint [RPCs](https://docs.tendermint.com/master/rpc/).
+
+As mentioned above, some return types are parsed from RPC response format. 
+If you want to see actual response format of AMO blockchain, 
+check out [RPC document](https://github.com/amolabs/docs/blob/master/rpc.md).
+
+Parsed types are in [index.d.ts](index.d.ts).
 
 ### fetchLastBlock()
 
