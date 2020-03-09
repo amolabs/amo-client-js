@@ -61,4 +61,209 @@ The third option is relevant when you are planning to implement read-only
 inspection features.
 
 ## API
-Check `AmoClient` in `index.d.ts`
+
+Requests can be made by passing the releavant paramaters to `AmoClient`.
+
+You can check types in `index.d.ts`
+
+## Types
+```typescript
+// Uppercase Hex encoded address
+type HexEncodedAddress = string
+
+// Uppercase Hex encoded id
+type HexEncodedParcelID = string
+
+// DecimalString represents number as string
+// e.g 1000 -> "1000"
+type DecimalString = string
+```
+## AmoClient
+
+AmoClient uses [Axios](https://github.com/axios/axios#request-config) internally for making requests 
+
+```typescript
+import { AxiosRequestConfig } from "axios"
+
+class AmoClient {
+    constructor(
+        // Config for Tendermint REST API and ABCI query
+        nodeClient?: AxiosRequestConfig,
+        // Config for AMO storage API
+        storageClient?: AxiosRequestConfig,
+        // WebSocket URL for newBlock event
+        wsURL?: string
+    )
+
+```
+Return type of AmoClient method is `Promise<T>`
+
+## Tendermint REST API
+AMO blockchain is based on [Tendermint](https://github.com/tendermint/tendermint).
+We provide basic Tendermint [RPCs](https://docs.tendermint.com/master/rpc/).
+
+### fetchLastBlock()
+
+- Fetch latest block header
+
+### fetchBlock(height)
+
+- Fetch Block of specific height
+
+### fetchBlockHeaders(maxHeight, count)
+
+- Fetch Block headers 
+
+### fetchRecentBlockHeaders()
+
+- Fetch recent 20 block headers
+
+### fetchTx(hash)
+
+- Fetch transaction by hash
+
+### fetchValidators()
+
+- Fetch validators of latest block
+
+### fetchTxsBySender(sender)
+
+- Fetch transactions by sender address
+
+### fetchTxsByParcel(parcel)
+
+- Fetch transactions by parcel id
+
+## ABCI Query
+Query indexed or stored data from AMO Blockchain. 
+
+https://github.com/amolabs/docs/blob/master/protocol.md#data-stores
+
+ABCI Query returns default value when request fails.
+
+- `DecimalString` -> `"0"`
+- `Object` -> `null`
+- `Array` -> `[]`
+
+### queryConfig()
+
+- Query config using in AMO Blockchain governance
+
+### queryBalance(address)
+
+- Query balance of address
+
+### queryStake(address)
+
+- Query stake
+
+### queryDelegate(address)
+
+- Query delegation
+
+### queryValidator(validatorAddress)
+
+- Query holder account of validator
+
+### queryDraft(draftId)
+
+- Query draft
+
+### queryStorage(storageId)
+
+- Query storage
+
+### queryParcel(parcelId)
+
+- Query parcel
+
+### queryRequest(buyer, target)
+
+- Query request
+
+### queryUsage(buyer, target)
+
+- Query usage
+
+### queryIncBlock(height)
+
+- Query incentive block
+
+### queryIncAddress(address)
+
+- Query incentive address
+
+### queryInc(height, address)
+
+- Query incentive
+
+## Transaction
+
+Signing transaction needs `elliptic` package.
+
+All Transaction method returns `Promise<TxResult>`.
+
+Information about transactions is in AMO blockchain [document](https://github.com/amolabs/docs/blob/master/protocol.md#transaction).
+
+```typescript
+import {ec} from 'elliptic'
+
+interface Account {
+    address: string
+    ecKey: ec.KeyPair
+}
+
+interface TxProcess {
+    code: number
+    data: string
+    log: string
+    gas_used: string
+    gas_wanted: string
+    info: string
+    tags: object
+}
+
+interface TxResult {
+    check_tx: TxProcess
+    deliver_tx: TxProcess
+    hash: string
+    height: string
+}
+```
+
+### sendTransfer(recipient, amount, sender)
+### sendStake(validatorAddress, amount, sender)
+### sendWithdraw(amount, sender)
+### sendDelegate(delegatee, amount, sender)
+### sendRetract(amount, sender)
+### sendPropose(draftId, config, desc, sender)
+### sendVote(draftId, approve, sender)
+### sendSetup(storageId, url, registrationFee, hostingFee, sender)
+### sendClose(storageId, sender)
+### sendRegisterParcel(parcel, sender)
+### sendDiscardParcel(parcel, sender)
+### sendRequestParcel(parcel, payment, sender)
+### sendCancelRequest(parcel, sender)
+### sendGrantParcel(parcel, grantee, custody, sender)
+### sendRevokeGrant(parcel, grantee, sender)
+### sendIssue(udcId, desc, operations, amount, sender)
+### sendLock(udcId, holder, amount, sender)
+
+## AMO storage
+
+### uploadParcel(owner, content)
+
+- TODO
+
+### downloadParcel(buyer, id)
+
+- TODO
+
+### inspectParcel(id)
+
+- TODO
+
+### removeParcel(id)
+
+- TODO
+
