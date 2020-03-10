@@ -12,6 +12,7 @@ const ADDRESS = 'BEFF22606A9FB730455736E7B33C846171F2865C'
 const STAKE_ADDRESS = '16CE44DE13ACD260FA3BCE018C53C51150540758'
 const VALIDATOR_ADDRESS = '3FC4FD58758FE9AEE1DD061C5753742FD3246057'
 const FAIL_ACCOUNT = '0000000000000000000000000000000000000000'
+const VALID_TX_HASH = 'e5683994a2498cdbc12c129c8fb31068845952e67964152052dfa1e49dd5bfa9'
 
 test('test promise', async (done) => {
   const block = await client.fetchBlock('3')
@@ -20,7 +21,7 @@ test('test promise', async (done) => {
 })
 
 test('fetchTx', async (done) => {
-  const tx = await client.fetchTx('25dc02a390222fe0c7aa018ee4b1e6511b4be3c6c1506d9a62e9eb7f4ae1438f')
+  const tx = await client.fetchTx(VALID_TX_HASH)
   console.log(JSON.stringify(tx, null, 4))
   done()
 })
