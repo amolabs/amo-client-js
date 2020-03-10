@@ -68,7 +68,6 @@ export class AmoClient {
   _client
   _storageClient
   _wsURL
-  _ws
 
   constructor (config, storageConfig, wsURL) {
     if (!config) {
@@ -110,9 +109,9 @@ export class AmoClient {
       throw new Error('websocket not supported')
     }
 
-    this._ws = new WebSocket(this._wsURL)
-    this._ws.onopen = () => {
-      this._ws.send(
+    const ws = new WebSocket(this._wsURL)
+    ws.onopen = () => {
+      ws.send(
         JSON.stringify({
           jsonrpc: '2.0',
           method: 'subscribe',
@@ -123,14 +122,15 @@ export class AmoClient {
         })
       )
     }
-    this._ws.onmessage = e => {
+    ws.onmessage = e => {
       const message = JSON.parse(e.data)
       if (message.id === 'newBlock#event') {
         const blockHeader = message.result.data.value.block.header
         onNewBlock(blockHeader.height)
       }
     }
-    this._ws.onerror = onError
+    ws.onerror = onError
+    return ws
   }
 
   fetchLastBlock () {
@@ -568,6 +568,6 @@ export class AmoClient {
       })
   }
 
-// TODO
+  // TODO
   removeParcel (id) { return Promise.reject(new Error('implement me')) }
 }
