@@ -226,8 +226,6 @@ Query incentive
 
 Signing transaction needs [`elliptic`](https://www.npmjs.com/package/elliptic) package.
 
-All Transaction method returns `Promise<TxResult>`.
-
 Information about transactions is in AMO blockchain [document](https://github.com/amolabs/docs/blob/master/protocol.md#transaction).
 
 ### Response schema (TxResult)
@@ -295,7 +293,7 @@ Every transaction method needs `sender` for signing transaction
 
 ### Parcels
 
-#### Parcel schemal
+#### Parcel schema
 ```js
 {
     "id": "<HexEncodedParcelId>",
