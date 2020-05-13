@@ -14,20 +14,17 @@ library or package intereact with AMO blockchain nodes over HTTP(S) using
 
 ### Usage
 ```javascript
-import { AMOClient } from 'amo-client'
+// commonjs
+const {AMO} = require('amo-client')
+// es6
+import {AMO} from "amo-client"
 
 // Create client
-const client = new AMOClient({
-  baseURL: '<AMO node rpc endpoint>' // by default: url.BC_NODE_AMO_TOKYO 
-  // ... extra config from AxiosRequestConfig
-}, {
-  baseURL: '<AMO Storage url>'
-  // ... extra config from AxiosRequestConfig
-}, 'ws://...')
+const client = new AMO();
 
 (async () => {
-  const lastBlock = await client.fetchLastBlock()
-  console.log(JSON.stringify(lastBlock, null, 4))
+  const result = await client.query.balance('0035B04B9F62B8FEAFC3500BC16E31EAF96E8361')
+  console.log(result)
 })()
 ```
 
@@ -346,5 +343,5 @@ Every transaction method needs `sender` for signing transaction
 - TODO
 
 ## Typescript
-All types in `index.d.ts` are already defined in AMO blockchain [RPC document](https://github.com/amolabs/docs/blob/master/rpc.md) 
+All types in `api.d.ts` are already defined in AMO blockchain [RPC document](https://github.com/amolabs/docs/blob/master/rpc.md) 
 except parsed types such as `Tx`, `FormattedBlock` and `FormattedBlockHeader`
