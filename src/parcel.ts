@@ -4,6 +4,7 @@ import axios, {AxiosInstance, AxiosRequestConfig} from "axios"
 
 interface ParcelAxiosInstance extends AxiosInstance {
   get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T>
+
   post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T>
 }
 
