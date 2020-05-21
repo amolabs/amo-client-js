@@ -14,20 +14,17 @@ library or package intereact with AMO blockchain nodes over HTTP(S) using
 
 ### Usage
 ```javascript
-import { AMOClient } from 'amo-client'
+// commonjs
+const {AMO} = require('amo-client')
+// es6
+import {AMO} from "amo-client"
 
 // Create client
-const client = new AMOClient({
-  baseURL: '<AMO node rpc endpoint>' // by default: url.BC_NODE_AMO_TOKYO 
-  // ... extra config from AxiosRequestConfig
-}, {
-  baseURL: '<AMO Storage url>'
-  // ... extra config from AxiosRequestConfig
-}, 'ws://...')
+const client = new AMO();
 
 (async () => {
-  const lastBlock = await client.fetchLastBlock()
-  console.log(JSON.stringify(lastBlock, null, 4))
+  const result = await client.query.balance('0035B04B9F62B8FEAFC3500BC16E31EAF96E8361')
+  console.log(result)
 })()
 ```
 
@@ -60,169 +57,115 @@ provides 3 methods to handle user private key:
 The third option is relevant when you are planning to implement read-only
 inspection features.
 
-## API
+## amo-client API
 
-Requests can be made by passing the relevant parameters to `AmoClient`.
+Requests can be made by `AMO` or `Parcel`
 
-```typescript
-// Type alias for convenience
-// Uppercase Hex encoded address
-type HexEncodedAddress = string
+* `AMO` is blockchain related RPC call client
 
-// Uppercase Hex encoded id
-type HexEncodedParcelId = string
+* `Parcel` is parcel storage related RPC call client 
+ 
+### AMO
 
-// DecimalString represents number as string
-// e.g 1000 -> "1000"
-type DecimalString = string
-```
-
-## AmoClient
-
-AmoClient uses [Axios](https://github.com/axios/axios#request-config) internally for making requests 
+##### AMO(endpoint = DEFAULT_AMO_ENDPOINT\[, keypair\])
 
 ```javascript
-class AmoClient {
-    constructor(
-        // Config for Tendermint API and ABCI query
-        // Axios instance config
-        nodeClient,
-        // Config for AMO storage API
-        // Axios instance config
-        storageClient,
-        // WebSocket URL for newBlock event
-        // String
-        wsURL
-    )
-}
+// Create client without ec.KeyPair
+// You can't make Tx requests
+AMO("http://localhost:26657")
 ```
-Return type of AmoClient method is `Promise`. 
-When request fails, client will reject with error object in response of AMO blockchain 
-[RPC](https://github.com/amolabs/docs/blob/master/rpc.md).
+```javascript
+const EC = require('elliptic')
 
-## Tendermint API
+// AMO blockchain uses p256
+const ec = new EC('p256');
+
+// Generate key or use existed key
+const key = ec.genKeyPair();
+
+// Create client with ec.KeyPair
+AMO("http://localhost:26657", key)
+```
+
+AMO client composed with other three clients. `Tendermint`, `Query` and `Transaction`
+#### Tendermint methods
+
+You can access `Tendermint` client by `tm`
+```javascript
+const amo = new AMO()
+// Fetch last block from network
+amo.tm.fetchLastBlock()
+```
+
 AMO blockchain is based on [Tendermint](https://github.com/tendermint/tendermint).
-AmoClient provides basic Tendermint [RPCs](https://docs.tendermint.com/master/rpc/).
+Tendermint client provides basic Tendermint [RPCs](https://docs.tendermint.com/master/rpc/).
 
 As mentioned above, some return types are parsed from RPC response format. 
 If you want to see actual response format of AMO blockchain, 
 check out [RPC document](https://github.com/amolabs/docs/blob/master/rpc.md).
 
-### fetchLastBlock()
-Fetch latest block header
+* fetchLastBlock()
 
-### fetchBlock(height)
-Fetch Block of specific height
+* fetchBlock(height)
 
-- height: `DecimalString` or `number`
+* fetchBlockHeaders(maxHeight, count)
 
-### fetchBlockHeaders(maxHeight, count)
-Fetch Block headers 
+* fetchTx(hash)
 
-- maxHeight: `number`
-- count: `number`
+* fetchValidators()
 
-### fetchRecentBlockHeaders()
-Fetch recent 20 block headers
+* ~~fetchTxsBySender(senderAddress)~~
 
-### fetchTx(hash)
-Fetch transaction by hash
+* ~~fetchTxsByParcel(parcelId)~~
 
-- hash: `HexEncodedHash`
+#### Query methods
 
-### fetchValidators()
-Fetch validators of latest block
+You can access `Query` client by `query`
+```javascript
+const amo = new AMO()
+// Query balance of account
+amo.query.balance("<ADDRESS>")
+```
 
-### fetchTxsBySender(sender)
-Fetch transactions by sender address
-
-- sender: `HexEncodedAddress`
-
-### fetchTxsByParcel(parcel)
-Fetch transactions by parcel id
-
-- parcel: `HexEncodedPArcelId`
-
-## ABCI Query
 Query indexed or stored data from AMO Blockchain. 
 
 Return types of query are defined in AMO Blockchain [protocol document](https://github.com/amolabs/docs/blob/master/protocol.md#data-stores)
 
-ABCI Query returns default value when request fails.
+* config()
 
-- `DecimalString` -> `"0"`
-- `Object` -> `null`
-- `Array` -> `[]`
+* balance(address)
 
-### queryConfig()
-Query config using in AMO Blockchain governance
+* stake(address)
 
-- return: [`BlockchainConfig`](https://github.com/amolabs/docs/blob/master/protocol.md#top-level-data)
+* delegate(address)
 
-### queryBalance(address)
-Query balance of address
+* validator(validatorAddress)
 
-- address: `HexEncodedAddress`
+* draft(draftId)
 
-### queryStake(address)
-Query stake
+* storage(storageId)
 
-- address: `HexEncodedAddress`
+* parcel(parcelId)
 
-### queryDelegate(address)
-Query delegation
+* request(buyerAddress, targetParcelId)
 
-- address: `HexEncodedAddress`
+* usage(buyerAddress, targetParcelId)
 
-### queryValidator(validatorAddress)
-Query holder account of validator
+* incBlock(height)
 
-- validatorAddress: `HexEncodedAddress`
+* incAddress(address)
 
-### queryDraft(draftId)
-Query draft
+* inc(height, address)
 
-- draftId: `DecimalString`
+#### Transaction
 
-### queryStorage(storageId)
-Query storage
+You can access `Transaction` client by `tx`
+```javascript
+const amo = new AMO("http://localhost:26657", keypair)
+// Send 1000 mote to another account
+amo.tx.transfer("<ADDRESS>", "1000")
+```
 
-- storageId: `DecimalString`
-
-### queryParcel(parcelId)
-Query parcel
-
-- parcelId: `HexEncodedParcelId`
-
-### queryRequest(buyer, target)
-Query request
-
-- buyer: `HexEncodedAddress`
-- target: `HexEncodedParcelId`
-
-### queryUsage(buyer, target)
-Query usage
-
-- buyer: `HexEncodedAddress`
-- target: `HexEncodedParcelId`
-
-### queryIncBlock(height)
-Query incentive block
-
-- height: `DecimalString` or `number`
-
-### queryIncAddress(address)
-Query incentive address
-
-- address: `HexEncodedAddress`
-
-### queryInc(height, address)
-Query incentive
-
-- height: `DecimalString` or `number`
-- address: `HexEncodedAddress`
-
-## Transaction
 
 Signing transaction needs [`elliptic`](https://www.npmjs.com/package/elliptic) package.
 
@@ -247,52 +190,6 @@ Information about transactions is in AMO blockchain [document](https://github.co
 }
 ```
 
-Every transaction method needs `sender` for signing transaction
-### Sender schema
-```js
-{
-    "address": "<HexEncodedAddress>"
-    "ecKey": {
-        // ec.KeyPair from elliptic
-    } 
-}
-```
-
-### Coins and stakes
-- sendTransfer(recipient, amount, sender)
-    - recipient: `HexEncodedAddress`
-    - amount: `DecimalString`
-- sendStake(validatorAddress, amount, sender)
-    - validatorAddress: `HexEncodedAddress`
-    - amount: `DecimalString`
-- sendWithdraw(amount, sender)
-    - amount: `DecimalString`
-- sendDelegate(delegatee, amount, sender)
-    - delegatee: `HexEncodedAddresss`
-    - amount: `DecimalString`
-- sendRetract(amount, sender)
-    - amount: `DecimalString`
-
-### Governance
-- sendPropose(draftId, config, desc, sender)
-    - draftId: `DecimalString`
-    - config: [`BlockchainConfig`](https://github.com/amolabs/docs/blob/master/protocol.md#top-level-data)
-    - desc: `string`
-- sendVote(draftId, approve, sender)
-    - draftId: `DecimalString`
-    - approve: `boolean`
-
-### Storage
-- sendSetup(storageId, url, registrationFee, hostingFee, sender)
-    - storageId: `DecimalString`
-    - url: `string`
-    - registrationFee: `DecimalString`
-    - hostringFee: `DecimalString`
-- sendClose(storageId, sender)
-    - storageId `DecimalString`
-
-### Parcels
-
 #### Parcel schema
 ```js
 {
@@ -301,50 +198,52 @@ Every transaction method needs `sender` for signing transaction
 }
 ```
 
-- sendRegisterParcel(parcel, sender)
-- sendDiscardParcel(parcel, sender)
-- sendRequestParcel(parcel, payment, sender)
-    - payment: `DecimalString`
-- sendCancelRequest(parcel, sender)
-- sendGrantParcel(parcel, grantee, custody, sender)
-    - grantee: `HexEncodedAddress`
-    - custody: `Buffer`
-- sendRevokeGrant(parcel, grantee, sender)
-    - grantee: `HexEncodedAddress`
+* transfer(recipientAddress, amount)
 
-### UDC (User Defined Coin)
+* stake(validatorAddress, amount)
 
-- sendIssue(udcId, desc, operations, amount, sender)
-    - udcId: `DecimalString`
-    - desc: `string`
-    - operations: `Array of HexEncodedAddress`
-    - amount: `DecimalString`
-- sendLock(udcId, holder, amount, sender)
-    - udcId: `DecimalString`
-    - holder: `HexEncodedAddress`
-    - amount: `DecimalString`
-- sendBurn(udcId, amount, sender)
-    - udcId: `DecimalString`
-    - amount: `DecimalString`
+* withdraw(amount)
 
-## AMO storage
+* delegate(delegateeAddress, amount)
 
-### uploadParcel(owner, content)
+* retract(amount)
 
-- TODO
+* propose(draftId, config[, desc])
 
-### downloadParcel(buyer, id)
+* vote(draftId, approve)
 
-- TODO
+* setup(storageId, url, registrationFee, hostingFee)
 
-### inspectParcel(id)
+* close(storageId)
 
-- TODO
+* register(parcel)
 
-### removeParcel(id)
+* discard(targetParcelId)
 
-- TODO
+* request(payment, targetParcelId)
 
-## Typescript
-All types in `index.d.ts` are already defined in AMO blockchain [RPC document](https://github.com/amolabs/docs/blob/master/rpc.md) 
-except parsed types such as `Tx`, `FormattedBlock` and `FormattedBlockHeader`
+* cancel(targetParcelId)
+
+* grant(parcel, granteeAddress)
+
+* revoke(parcel, granteeAddress)
+
+* issue(udcId, operatorsAddress, amount[, desc])
+
+* lock(udcId, holderAddress, amount)
+
+* burn(udcId, amount)
+
+### Parcel
+
+##### Parcel(endpoint, keypair)
+
+#### Parcel methods
+
+* uploadParcel(content)
+
+* downloadParcel(parcelId)
+
+* inspectParcel(parcelId)
+
+* removeParcel(parcelId)

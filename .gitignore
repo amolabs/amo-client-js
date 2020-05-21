@@ -105,3 +105,6 @@ typings/
 .idea/
 
 dist/
+
+src/@types/*
+!src/@types/api.d.ts

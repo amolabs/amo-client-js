@@ -1,17 +1,26 @@
 {
   "presets": [
     [
+      "@babel/preset-typescript"
+    ],
+    [
       "@babel/preset-env",
       {
         "targets": {
-          "node": "current"
+          "node": "10.15"
         }
       }
     ]
   ],
   "plugins": [
     "@babel/plugin-proposal-object-rest-spread",
-    "@babel/plugin-proposal-class-properties"
+    "@babel/plugin-proposal-class-properties",
+    [
+      "@babel/plugin-transform-classes",
+      {
+        "loose": true
+      }
+    ]
   ],
   "comments": false
 }
