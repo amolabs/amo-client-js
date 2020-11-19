@@ -207,7 +207,7 @@ class Transaction {
         tx.last_height = sync_info.latest_block_height
         return tx
       })
-      .then(this.singTx)
+      .then((res: any) => this.singTx(res))
   }
 
   transfer(recipient: string, amount: string) {
